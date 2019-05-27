@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2" xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2" xmlns:imsmd="http://www.imsglobal.org/xsd/imsmd_rootv1p2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="com.goone.package.1914424" xsi:schemaLocation="http://www.imsproject.org/xsd/imscp_rootv1p1p2 imscp_rootv1p1p2.xsd http://www.imsglobal.org/xsd/imsmd_rootv1p2p1 imsmd_rootv1p2p1.xsd http://www.adlnet.org/xsd/adlcp_rootv1p2 adlcp_rootv1p2.xsd" version="1">
+   <metadata>
+      <schema>ADL SCORM</schema>
+      <schemaversion>1.2</schemaversion>
+      <imsmd:lom>
+         <imsmd:general>
+            <imsmd:title>
+               <imsmd:langstring xml:lang="en-US">How to Conduct Effective Business Meetings</imsmd:langstring>
+            </imsmd:title>
+         </imsmd:general>
+      </imsmd:lom>
+   </metadata>
+   <organizations default="goone">
+      <organization identifier="goone">
+         <title>How to Conduct Effective Business Meetings</title>
+         <item identifier="ITEM1914424" identifierref="COURSE1914424">
+            <title>How to Conduct Effective Business Meetings</title>
+         </item>
+      </organization>
+   </organizations>
+   <resources>
+      <resource identifier="COURSE1914424" type="webcontent" adlcp:scormtype="sco" href="index.html">
+         <file href="index.html" />
+         <file href="config.js" />
+      </resource>
+   </resources>
+</manifest>

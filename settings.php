@@ -30,7 +30,7 @@ use mod_goone\settings\setting_statictext;
 if ($ADMIN->fulltree) {
     
     require_once("$CFG->libdir/resourcelib.php");
-        require_once(__DIR__.'/classes/settings/setting_statictext.php');
+    require_once(__DIR__.'/classes/settings/setting_statictext.php');
     require_once($CFG->dirroot.'/mod/goone/lib.php');    
 
 

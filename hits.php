@@ -7,8 +7,11 @@ $config = get_config('mod_goone');
 
     $pkeyword = optional_param('keyword','', PARAM_RAW); 
     $pprovider = optional_param('provider','', PARAM_RAW); 
+    $pprovider = explode(',',$pprovider);
     $planguage = optional_param('language','', PARAM_RAW); 
+    $planguage = explode(',',$planguage);
     $ptag = optional_param('tag','', PARAM_RAW); 
+    $ptag = explode(',',$ptag);
     $pprice = optional_param('price','', PARAM_RAW); 
     $ptype = optional_param('type','', PARAM_RAW); 
     $psub = optional_param('subscribed','',PARAM_RAW);
@@ -32,15 +35,16 @@ if ($config->showallfilter == 1) {
   $pcoll = "";
 }
 
-if ($pkeyword || $ptag || $ptype && !$psort) {
-  $psort = "relevance";
+if (!$psort) {
+  $psort = "popularity";
 }
+
 
 $data = array (
 'keyword' => $pkeyword,
-'provider%5B%5D' => $pprovider,
-'language%5B%5D' => $planguage,
-'tags%5B%5D' => $ptag,
+// 'provider%5B%5D' => $pprovider,
+// 'language%5B%5D' => $planguage,
+// 'tags%5B%5D' => $ptag,
 'price%5Bmax%5D' => $pprice,
 'type' => $ptype,
 'subscribed' => $psub,
@@ -48,20 +52,37 @@ $data = array (
 'collection' => $pcoll,
 'sort' => $psort,
 'limit' => $limit);
+
+foreach ($planguage as $plang) {
+  if($plang){
+  $params2 .= "&language%5B%5D=".$plang;
+}
+}
+foreach ($ptag as $pta) {
+  if($pta){
+  $params2 .= "&tags%5B%5D=".$pta;
+}
+}
+foreach ($pprovider as $pprov) {
+  if($pprov) {
+  $params2 .= "&provider%5B%5D=".$pprov;
+}
+}
 // var_dump($data);die;
+
+
 foreach($data as $key=>$value)
         if(!$value==''){
                 $params .= $key.'='.$value.'&';
          }
         $params = trim($params, '&');
-
 if (!goone_tokentest()) {
   echo $OUTPUT->notification(get_string('connectionerror', 'goone'), 'notifyproblem');
 }
 $curl = curl_init();
 
 curl_setopt_array($curl, array(
- CURLOPT_URL => "https://api.GO1.com/v2/learning-objects?facets=instance,tag,language&marketplace=all&".$params,
+ CURLOPT_URL => "https://api.GO1.com/v2/learning-objects?facets=instance,tag,language&marketplace=all&".$params.$params2,
   CURLOPT_RETURNTRANSFER => true,
   CURLOPT_ENCODING => "",
   CURLOPT_MAXREDIRS => 10,

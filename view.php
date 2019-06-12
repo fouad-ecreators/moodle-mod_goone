@@ -1,15 +1,9 @@
 <?php
-    /* 
-        When a course renders its page layout and activities it generates the links to view them using the view.php script, 
-        so the links will look like <wwwrootofyoursite>/mod/<modname>/view.php?id=4, where 4 is the course module id. For the 
-        certificate example the beginning of the view.php page looks like the following -
-    */
-    
+
     require_once('../../config.php');
     require_once('lib.php');
 
     global $CFG, $DB, $OUTPUT, $PAGE, $USER;
-    $PAGE->requires->css(new moodle_url('/mod/goone/css/customgoone.css'));
     require_once($CFG->dirroot.'/mod/scorm/locallib.php');
     require_once($CFG->dirroot.'/mod/scorm/datamodels/scorm_12lib.php');
     $newwin = false; 
@@ -33,14 +27,18 @@
     if (!$goone = $DB->get_record('goone', array('id'=> $cm->instance))) {
         print_error(get_string('cmincorrect','goone')); 
     }
-    
+
     $PAGE->set_url('/mod/goone/view.php', array('id' => $cm->id)); 
     $PAGE->set_title($goone->name); 
-        $exiturl = course_get_url($course, $cm->sectionnum);
+    $PAGE->requires->js_call_amd('mod_goone/viewer','init');
+
+
+    $exiturl = course_get_url($course, $cm->section);
     $strexit = get_string('exitactivity', 'scorm');
     $exitlink = html_writer::link($exiturl, $strexit, array('title' => $strexit, 'class' => 'btn btn-default'));
     $PAGE->set_button($exitlink);
-    
+
+    //Handle opening in a new window
     if ($newwin == 1) {
     $PAGE->set_pagelayout('embedded');
     }
@@ -49,25 +47,20 @@
         echo $OUTPUT->header();
         echo $OUTPUT->heading(format_string($goone->name));
         echo "The GO1 Activity has been launched in a new window.";
-         $urltogo = new moodle_url('/mod/goone/view.php', array('id'=>$goone->id));
-    ?><script>
-    setTimeout(function(){
-        window.open('<?php echo $urltogo;?>&win=1');}, 1500);
-    </script><?php
+        $urltogo = new moodle_url('/mod/goone/view.php', array('id'=>$cm->id));
+        $PAGE->requires->js_call_amd('mod_goone/viewer','newwindow', array(($urltogo->__toString())));
         echo $OUTPUT->footer();
-       
-        return;
-
+       return;
     }
+
+//load all the goodies we need now for GO1 modules
     $PAGE->requires->js(new moodle_url('/lib/cookies.js'), true);
-    //$PAGE->requires->js(new moodle_url('/mod/goone/scorm12.js'), true);
     $PAGE->requires->js(new moodle_url('/mod/scorm/module.js'), true);
     $PAGE->requires->js(new moodle_url('/mod/scorm/request.js'), true);
 
-
-
     echo $OUTPUT->header();
     echo(goone_inject_datamodel());
+
     if (!$newwin) {
     echo $OUTPUT->heading(format_string($goone->name));
     }
@@ -75,55 +68,21 @@
 
 ?>
 
-
   <script type="text/javascript" src="https://api.go1.co/scorm/assets/jquery-1.12.4.min.js"></script>
-<!--   <script>
-    <?php echo $DB->get_field('goone', 'token', array('id' => $goone->id)); ?>
-  </script> -->
   <script>
     "use strict";
-
+    
 const ScormPackage_Value = {
-    "token": "3g1bkf71mhpjno1evt7madm0a4r",
+    "token": "<?php echo $DB->get_field('goone', 'token', array('id' => $goone->id)); ?>",
     "version": "1.2",
     "id": <?php echo $DB->get_field('goone', 'loid', array('id' => $goone->id)); ?>
 };
   </script>
-
-
-  <script>
-var $win = $(window);
-
-$(document).ready(function () {
-        var newheight = ($win.height()-50);
-    if (newheight < 680 || isNaN(newheight)) {
-        newheight = 680
-    }
-    $("#content").height(newheight);
-});
-
-$win.on('resize',function(){
-    var newheight = ($win.height()-50);
-    if (newheight < 680 || isNaN(newheight)) {
-        newheight = 680
-    }
-    $("#content").height(newheight);
-});
-
-  </script>
   <script type="text/javascript" src="https://api.go1.co/scorm/assets/service.js"></script>
-
-        <style>
-    html, body, iframe, #content {
-    }
-
-  </style>
-
   <div id="content"></div>
 
- 
-
 <?php  
+
 echo $OUTPUT->footer();
 
    

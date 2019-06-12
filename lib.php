@@ -1,5 +1,7 @@
 <?php
 
+defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->libdir.'/completionlib.php');
 $config = get_config('mod_goone');
 
@@ -12,8 +14,10 @@ function goone_add_instance($data, $mform = null){
 
     $data->timecreated =  time();    
     $data->id = $DB->insert_record('goone', $data);
-
-    $fp = fopen($CFG->dataroot.'/GO1/'.$data->loid.'.zip', 'w+');
+    $tempdir = 'goone';
+    make_temp_directory($tempdir);
+    $filename = $data->loid.'.zip';
+    $fp = fopen($CFG->tempdir . $tempdir . $filename, 'w+');
     $curl = curl_init();
 
         curl_setopt_array($curl, array(
@@ -26,31 +30,31 @@ function goone_add_instance($data, $mform = null){
           CURLOPT_FILE => $fp,
           CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
           CURLOPT_CUSTOMREQUEST => "GET",
-          CURLOPT_POSTFIELDS => "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"limit\"\r\n\r\n1\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--",
+          CURLOPT_POSTFIELDS => "Content-Disposition: form-data",
           CURLOPT_HTTPHEADER => array(
             "Authorization:  Bearer ".get_config('mod_goone', 'token'),
             "cache-control: no-cache",
-            "content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"
+            "content-type: multipart/form-data"
           ),
         ));
 
         curl_exec($curl);
         fclose($fp);
 
-        $zipconf = fopen('zip://'.$CFG->dataroot.'/GO1/'.$data->loid.'.zip#config.js', 'r');
-        $zipres = fread($zipconf, 8192);
+        $zipconf = fopen('zip://'.$CFG->tempdir . $tempdir . $filename.'#config.js', 'r');
+        $token = fread($zipconf, 8192);
 
-        $data->token = $zipres;
-        fclose ('zip://'.$CFG->dataroot.'/GO1/'.$data->loid.'.zip#config.js', 'r');
+        preg_match('/{([^}]*)}/',$token, $token);
+        $token = json_decode($token[0]);
+        $data->token = $token->token;
 
-
+        fclose($zipconf);
+        if (!$data->token) {
+          throw new moodle_exception('learningobjecterror', $data->loid);
+        }
     $DB->set_field('course_modules', 'instance', $data->id, array('id'=>$cmid));
     $context = context_module::instance($cmid);
     $DB->update_record('goone', $data);
-
-
- //   goone_grade_item_update($goone);
-
 
     return $data->id;
 }
@@ -59,19 +63,11 @@ function goone_update_instance($data, $mform){
     
     global $CFG, $DB;
 
-    //Update goone main table
     $cmid               = $data->coursemodule;
     $data->timemodified = time();
     $data->id           = $data->instance;
     $data->revision     = $data->revision++;
     $DB->update_record('goone', $data);
-
-    //Update goone lessons
-    /*Remove existing lessons on this activity and insert updates lessons vs. 
-        Update all lessons on this activity- which requires an id param in update_record(), will need to retrieve the table id of the lesson using gooneid and lessonid.
-        To get the lesson_id to be replaced, get all lessons inside this goone activity and loop to find the old lesson_id to be used for the id param ugh*/
-
-
 
     $DB->set_field('course_modules', 'instance', $data->instance, array('id'=>$cmid));
     
@@ -124,8 +120,7 @@ function goone_supports($feature) {
     switch($feature) {
         case FEATURE_COMPLETION_TRACKS_VIEWS: return true;
         case FEATURE_COMPLETION_HAS_RULES: return true;
-        // case FEATURE_BACKUP_MOODLE2:
-        //     return true;
+        case FEATURE_BACKUP_MOODLE2: return true;
 
         
 
@@ -286,6 +281,12 @@ if($httpcode == 200)
 }
 //retreives result hits in content browser
 function goone_hits($ftype){
+  $psub = "";
+  $pcoll = "";
+  $psub = "";
+  $params = "";
+  $pmark = "";
+  $ptype = "";
 if($ftype == "all"){
     $psub = "";
     $pcoll = "";
@@ -333,22 +334,41 @@ curl_close($curl);
 $response = json_decode($response,true);
 return number_format($response['total']);
 }
+
+// cleans up html tags from result desceiptions
+function goone_clean_hits($data){
+//Replace unicode for < and > with < or > and Replace back slash escape character and finally Remove unicode characters
+$data = preg_replace('/\\\\u[0-9A-F]{4}/i', '', str_replace("\u003C","<",str_replace("\u003E",">",str_replace("\/","/",$data))));
+//Convert to HTML to clean up any invalid HTML jank
+$data = html_entity_decode($data);
+//Remove opening tags and remove leading and trailing spaces
+$data = preg_replace('(\s*<[a-z A-Z 0-9]*>\\s*)', '', $data);
+//Replace closing tags and leading and trailing spaces with a single space character
+$data = preg_replace('(\s*<\/[a-z A-Z 0-9]*>\s*)', ' ', $data);
+//Replace any tags that contain attributes
+$data = preg_replace('(\s*<[^>]*>\s*)', '', $data);
+// $regex = "|https?://[a-z\.0-9]+|i";
+// this is optional if you want to remove links $jank = preg_replace($regex,'',$jank);
+   return $data;
+}
+
 //outputs scorm session state based on completion record
 // 0 = not started, 1 = in progress, 2 = complete
 function goone_session_state($gooneid,$cmid){
     global $CFG, $DB, $PAGE, $USER;
-    $completionRecord = $DB->get_field('goone_completion', 'completed', array('gooneid'=>$gooneid,'userid'=>$USER->id));
-    if ($completionRecord->completed == 0) {
+    $def = new stdClass;
+    $completionRecord = $DB->get_record('goone_completion', array('gooneid'=>$gooneid,'userid'=>$USER->id),$fields='*', $strictness=IGNORE_MISSING);
+
+    $def->{(3)} = goone_scorm_def(1,'');
+    $def->{(6)} = goone_scorm_def(1,'');
+    $cmistate = "normal";
+
+    if ($completionRecord && $completionRecord->completed == 1) {
         $def->{(3)} = goone_scorm_def(1,'');
-        $def->{(6)} = goone_scorm_def(1,'');
+        $def->{(6)} = goone_scorm_def(2,$completionRecord->location);
         $cmistate = "normal";
     }
-    if ($completionRecord->completed == 1) {
-        $def->{(3)} = goone_scorm_def(1,'');
-        $def->{(3)} = goone_scorm_def(2,$completionRecord->location);
-        $cmistate = "normal";
-    }
-    if ($completionRecord->completed == 2) {
+    if ($completionRecord && $completionRecord->completed == 2) {
         $def->{(3)} = goone_scorm_def(3,'');
         $def->{(6)} = goone_scorm_def(4,'');
         $cmistate = "review";
@@ -368,9 +388,11 @@ function goone_session_state($gooneid,$cmid){
  }
 
  //returns def variable for scorm session state
- function goone_scorm_def($state,$location) {
+function goone_scorm_def($state,$location) {
     global $USER;
-
+    if (!$location) {
+      $location = "";
+    }
     if ($state == 1) {
         $cmiCredit = "credit";
         $cmiEntry = "ab-initio";
@@ -441,20 +463,18 @@ function goone_session_state($gooneid,$cmid){
 
 //sets completion records in completion table along with scorm cmi location track
 //works with datamodel.php
- function goone_set_completion($cm,$userid,$location,$type) { 
+function goone_set_completion($cm,$userid,$location,$type) { 
     global $CFG, $DB;
    // $goonid = IDONTKNOW
     $gcomp = new stdClass();
     $gcomp->userid = $userid;
     $gcomp->gooneid = $cm->instance;
     $gcomp->position = $location;
+    $gcomp->timemodified = time(); 
 
     $compstate = $DB->get_record('goone_completion', array('gooneid'=> $cm->instance,'userid' => $userid), 'id,completed',$strictness=IGNORE_MISSING);
-    if($compstate->completed == 2) {
-        return true;
-    }
 
-    if ($type == "completed") {
+    if ($type == "completed" || $compstate->completed == 2) {
     $gcomp->completed = 2;
     $course = new stdClass();
     $course->id = $cm->course;    
@@ -477,8 +497,9 @@ function goone_session_state($gooneid,$cmid){
     return true;
     }
  }
+
  //gets scorm_12.js file form mod_scorm, modifies the datamodelurl variable, stores in cache and retreives it.
- function goone_inject_datamodel() {
+function goone_inject_datamodel() {
     global $CFG;
         $cache = cache::make('mod_goone', 'scorm12datamodel');
 
@@ -490,4 +511,108 @@ function goone_session_state($gooneid,$cmid){
     $cache->set('scorm12js', $data);
     $data = $cache->get('scorm12js');
     return $data;
+}
+function goone_get_hits($params) {
+
+$curl = curl_init();
+
+curl_setopt_array($curl, array(
+ CURLOPT_URL => "https://api.GO1.com/v2/learning-objects?facets=instance,tag,language&marketplace=all&".$params,
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_ENCODING => "",
+  CURLOPT_MAXREDIRS => 10,
+  CURLOPT_TIMEOUT => 30,
+  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+  CURLOPT_CUSTOMREQUEST => "GET",
+  CURLOPT_HTTPHEADER => array(
+    "Authorization: Bearer ".get_config('mod_goone', 'token'),
+    "cache-control: no-cache",
+    "content-type: multipart/form-data"
+  ),
+));
+
+$response = curl_exec($curl);
+curl_close($curl);
+
+return $response;
+  }
+
+function goone_get_facets() {
+    $curl = curl_init();
+
+curl_setopt_array($curl, array(
+ CURLOPT_URL => "https://api.GO1.com/v2/learning-objects?facets=instance,tag,language&limit=0",
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_ENCODING => "",
+  CURLOPT_MAXREDIRS => 10,
+  CURLOPT_TIMEOUT => 30,
+  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+  CURLOPT_CUSTOMREQUEST => "GET",
+  CURLOPT_HTTPHEADER => array(
+    "Authorization: Bearer ".get_config('mod_goone', 'token'),
+    "cache-control: no-cache",
+    "content-type: application/x-www-form-urlencoded"
+  ),
+));
+$facets = curl_exec($curl);
+curl_close($curl);
+return $facets;
+  }
+
+function goone_get_lang($lang) { 
+$languages = get_string_manager()->get_list_of_languages();
+if (array_key_exists($lang,$languages)) { 
+  return $languages[$lang];
+} 
+if (strpos($lang,'-') > 0) {
+ list($langcode, $countrycode) = explode('-', $lang, 2); 
+ if (array_key_exists($langcode, $languages)) {
+  $string = $languages[$langcode]; $countrycode = clean_param(strtoupper($countrycode), PARAM_STRINGID); 
+  if (get_string_manager()->string_exists($countrycode, 'core_countries')) { 
+    return $string . " (" . get_string($countrycode, 'core_countries') . ")"; }
+ }
+}
+if (empty($lang)) { 
+  return get_string('unknownlanguage','mod_goone'); 
+} 
+return $lang;
+}
+
+function goone_modal_overview($loid) {
+
+  $curl = curl_init();
+
+  curl_setopt_array($curl, array(
+   CURLOPT_URL => "https://api.go1.com/v2/learning-objects/".$loid,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_ENCODING => "",
+    CURLOPT_MAXREDIRS => 10,
+    CURLOPT_TIMEOUT => 30,
+    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    CURLOPT_CUSTOMREQUEST => "GET",
+    CURLOPT_HTTPHEADER => array(
+      "Authorization: Bearer ".get_config('mod_goone', 'token'),
+      "cache-control: no-cache",
+      "content-type: multipart/form-data"
+    ),
+  ));
+
+  $response = curl_exec($curl);
+  curl_close($curl);
+  $data = json_decode($response,true);
+  $data['has_items'] = !empty($data['items']);
+
+  foreach ($data['delivery'] as &$obj) {
+   $obj = convertToHoursMins($obj);
+  }
+  return $data;
+}
+
+function convertToHoursMins($time, $format = '%02d:%02d') {
+    if ($time < 1) {
+        return;
+    }
+    $hours = floor($time / 60);
+    $minutes = ($time % 60);
+    return sprintf($format, $hours, $minutes);
 }

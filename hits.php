@@ -5,142 +5,85 @@ require_once($CFG->dirroot.'/mod/goone/lib.php');
 require_login();
 $config = get_config('mod_goone');
 
-    $pkeyword = optional_param('keyword','', PARAM_RAW); 
-    $pprovider = optional_param('provider','', PARAM_RAW); 
-    $pprovider = explode(',',$pprovider);
-    $planguage = optional_param('language','', PARAM_RAW); 
-    $planguage = explode(',',$planguage);
-    $ptag = optional_param('tag','', PARAM_RAW); 
-    $ptag = explode(',',$ptag);
-    $pprice = optional_param('price','', PARAM_RAW); 
-    $ptype = optional_param('type','', PARAM_RAW); 
-    $psub = optional_param('subscribed','',PARAM_RAW);
-    $ppage = optional_param('page','', PARAM_RAW); 
-    $psort = optional_param('sort','', PARAM_RAW);
-    $poffset = optional_param('offset','', PARAM_RAW);
-
+    $keyword = optional_param('keyword','', PARAM_RAW); 
+    $provider = optional_param('provider','', PARAM_RAW); 
+    $provider = explode(',',$provider);
+    $language = optional_param('language','', PARAM_RAW); 
+    $language = explode(',',$language);
+    $tag = optional_param('tag','', PARAM_RAW); 
+    $tag = explode(',',$tag);
+    $price = optional_param('price','', PARAM_RAW); 
+    $type = optional_param('type','', PARAM_RAW); 
+    $sub = optional_param('subscribed','',PARAM_RAW);
+    $page = optional_param('page','', PARAM_RAW); 
+    $sort = optional_param('sort','', PARAM_RAW);
+    $offset = optional_param('offset','', PARAM_RAW);
     $limit = 20;
 
-    if (!$ppage) {$ppage = 0;}
-
-if ($config->premiumfilter == 1)
-  {$psub = "true";}
-
-if ($config->collectionsfilter == 1) {
-  $pcoll = "default";
-  $psub = "";}
-
-if ($config->showallfilter == 1) {
-  $psub = "";
-  $pcoll = "";
+    if (!$page) {$page = 0;}
+//premium
+if ($config->filtersel == 1)
+  {$sub = "true";}
+//collections
+if ($config->filtersel == 2) {
+  $coll = "default";
+  $sub = "";}
+//showall
+if ($config->filtersel == 0) {
+  $sub = "";
+  $coll = "";
 }
-
-if (!$psort) {
-  $psort = "popularity";
-}
-
 
 $data = array (
-'keyword' => $pkeyword,
-// 'provider%5B%5D' => $pprovider,
-// 'language%5B%5D' => $planguage,
-// 'tags%5B%5D' => $ptag,
-'price%5Bmax%5D' => $pprice,
-'type' => $ptype,
-'subscribed' => $psub,
-'offset' => $poffset,
-'collection' => $pcoll,
-'sort' => $psort,
+'keyword' => $keyword,
+'price%5Bmax%5D' => $price,
+'type' => $type,
+'subscribed' => $sub,
+'offset' => $offset,
+'collection' => $coll,
+'sort' => $sort,
 'limit' => $limit);
-
-foreach ($planguage as $plang) {
-  if($plang){
-  $params2 .= "&language%5B%5D=".$plang;
-}
-}
-foreach ($ptag as $pta) {
-  if($pta){
-  $params2 .= "&tags%5B%5D=".$pta;
-}
-}
-foreach ($pprovider as $pprov) {
-  if($pprov) {
-  $params2 .= "&provider%5B%5D=".$pprov;
-}
-}
-// var_dump($data);die;
-
-
+$params = "";
 foreach($data as $key=>$value)
-        if(!$value==''){
-                $params .= $key.'='.$value.'&';
-         }
-        $params = trim($params, '&');
-if (!goone_tokentest()) {
-  echo $OUTPUT->notification(get_string('connectionerror', 'goone'), 'notifyproblem');
+  if(!$value==''){
+          $params .= $key.'='.$value.'&';
+   }
+  $params = trim($params, '&');
+
+foreach ($language as $lang) {
+  if($lang){
+  $params .= "&language%5B%5D=".$lang;
 }
-$curl = curl_init();
-
-curl_setopt_array($curl, array(
- CURLOPT_URL => "https://api.GO1.com/v2/learning-objects?facets=instance,tag,language&marketplace=all&".$params.$params2,
-  CURLOPT_RETURNTRANSFER => true,
-  CURLOPT_ENCODING => "",
-  CURLOPT_MAXREDIRS => 10,
-  CURLOPT_TIMEOUT => 30,
-  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-  CURLOPT_CUSTOMREQUEST => "GET",
-  CURLOPT_POSTFIELDS => "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name=\"limit\"\r\n\r\n1\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--",
-  CURLOPT_HTTPHEADER => array(
-    "Authorization: Bearer ".get_config('mod_goone', 'token'),
-    "cache-control: no-cache",
-    "content-type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"
-  ),
-));
-
-$response = curl_exec($curl);
-$err = curl_error($curl);
-
-curl_close($curl);
-
-
-if ($err) {
-  echo "cURL Error #:" . $err;
-} 
-
-function dejank($jank)
-{
-//Replace unicode for < and > with < or > and Replace back slash escape character and finally Remove unicode characters
-$jank = preg_replace('/\\\\u[0-9A-F]{4}/i', '', str_replace("\u003C","<",str_replace("\u003E",">",str_replace("\/","/",$jank))));
-//Convert to HTML to clean up any invalid HTML jank
-$jank = html_entity_decode($jank);
-//Remove opening tags and remove leading and trailing spaces
-$jank = preg_replace('(\s*<[a-z A-Z 0-9]*>\\s*)', '', $jank);
-//Replace closing tags and leading and trailing spaces with a single space character
-$jank = preg_replace('(\s*<\/[a-z A-Z 0-9]*>\s*)', ' ', $jank);
-//Replace any tags that contain attributes
-$jank = preg_replace('(\s*<[^>]*>\s*)', '', $jank);
-// $regex = "|https?://[a-z\.0-9]+|i";
-// this is optional if you want to remove links $jank = preg_replace($regex,'',$jank);
-   return $jank;
+}
+foreach ($tag as $ta) {
+  if($ta){
+  $params .= "&tags%5B%5D=".$ta;
+}
+}
+foreach ($provider as $prov) {
+  if($prov) {
+  $params .= "&provider%5B%5D=".$prov;
+}
 }
 
-
+$response = goone_get_hits($params);
 $response = json_decode($response,true);
+
 foreach ($response['hits'] as &$obj) {
-   $obj['description'] = dejank($obj['description']);
+   $obj['description'] = goone_clean_hits($obj['description']);
    $obj['pricing']['price'] = '$'.$obj['pricing']['price'];
+   //Set the "Included" or "Free" flag on each result
     if (!empty($obj['subscription']) and ($obj['subscription']['licenses'] === -1 or $obj['subscription']['licenses'] > 0)) {
-      $obj['pricing']['price'] = "Included";
+      $obj['pricing']['price'] = get_string('included', 'goone');
     }
-    if ($obj['pricing']['price'] === "$0")
-      { $obj['pricing']['price'] = "Free";
+    if ($obj['pricing']['price'] === "$0") {
+      $obj['pricing']['price'] = get_string('free', 'goone');
   }
 }
 
 
 $context = context_system::instance();
-
-
-
+$PAGE->set_context($context);
+$PAGE->set_pagelayout('embedded');
 echo $OUTPUT->render_from_template('mod_goone/hits', $response);
 

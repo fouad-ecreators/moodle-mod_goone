@@ -1,11 +1,19 @@
 <?php
 
-    defined('MOODLE_INTERNAL') || die;
+defined('MOODLE_INTERNAL') || die;
+/**
+* Version information
+*
+* @package   mod_goone
+* @copyright 2019 Fouad Saikali <fouad@ecreators.com.au>
+* @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+*/
 
-    $plugin->component = 'mod_goone';
-    $plugin->version  = 2019022602.00;  // Plugin most recent update on 26th Sep 2018.
-    $plugin->release  = 'v2.0-r1';   // This is our first commit for goone-v2.0 branch.
-    $plugin->requires = 2016052308.00;
-    $plugin->maturity = MATURITY_STABLE; // MATURITY_ALPHA, MATURITY_BETA, MATURITY_RC or MATURITY_STABLE.
-    $plugin->cron = 0;
-    $plugin->dependencies = array();
+$plugin->component = 'mod_goone';
+$plugin->version  = 2019060602.00;
+$plugin->release  = 'v1.0'; 
+$plugin->requires = 2015111600.00;
+$plugin->maturity = MATURITY_STABLE; 
+$plugin->dependencies = array(
+    'mod_scorm' => ANY_VERSION,
+);

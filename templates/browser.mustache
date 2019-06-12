@@ -1,7 +1,4 @@
 
-
-
-<!-- modal -->
 <div class="modal fade" id="lomodal" tabindex="-1" role="dialog" aria-labelledby="lomodalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg ">
     <div class="modal-content " style="height:900px;width:900px;" >
@@ -9,39 +6,33 @@
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
       </div>
       <div class="modal-body embed-responsive">
-          <iframe class="embed-responsive-item" id="loiframe" src="https://cdn-images-1.medium.com/max/1600/1*9EBHIOzhE1XfMYoKz1JcsQ.gif" frameborder="0" allowtransparency="true"></iframe>  
+        <div id="lospinny" class="preloader w-100 text-center" style="text-align:center; display:block;">
+            <img src="pix/spinner.gif">
+        </div>
+          <iframe class="embed-responsive-item" id="loiframe" src="" frameborder="0" allowtransparency="true" >
+
+          </iframe>  
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" id="submitlo" loid="#" loname="#" onclick="return CloseMySelf(this);">Select</button>
+        <button type="button" class="btn btn-default" data-dismiss="modal">{{# str }} close, mod_goone {{/ str }}</button>
+        <button type="button" class="btn btn-primary" id="submitlo" loid="#" loname="#" onclick="return CloseMySelf(this);">{{# str }} select, mod_goone {{/ str }}</button>
       </div>
     </div>
   </div>
 </div>
 
-
-
-
 <div class="container" >
-                    <h2>Filters</h2>
+                    <h2>{{# str }} filters, mod_goone {{/ str }}</h2>
 
     <form class="form-inline">
-
-
-
-
-
         <div class="form-row w-100 mb-2">
-
             <div class="form-group col-sm-10 col-lg-10">
                 <div>
-                <label for="keyword" class="control-label ml-0">Keyword search
+                <label for="keyword" class="control-label ml-0">{{# str }} keyword, mod_goone {{/ str }}
                 </label>
             </div>
                 <input type="text"  class="form-control w-100" name="keyword" id="keyword"/>
             </div>
-
-
 
             <div class="form-group col-sm-2 col-lg-2 float-right">
                 <div><label class="control-label ml-0" for="sort">
@@ -49,39 +40,29 @@
                 </label>
             </div>
             <select class="custom-select w-100" id="sort" name="sort">
-                    <option value="relevance">Relevance</option><option value="popularity" {{msort}}>Popularity</option><option value="price">Price</option><option value="title">Title</option><option value="created">Created</option>
+                    <option value="relevance">{{# str }} relevance, mod_goone {{/ str }}</option><option value="popularity" selected>{{# str }} popularity, mod_goone {{/ str }}</option><option value="price">{{# str }} price, mod_goone {{/ str }}</option><option value="title">{{# str }} title, mod_goone {{/ str }}</option><option value="created">{{# str }} created, mod_goone {{/ str }}</option>
                 </select>
             </div>
         </div>
 
-
-
-
-
-        <div class="form-row">
-
+        <div class="form-row container-fluid">
             <div class="form-group col-sm-6 col-md-3">
                 <label for="provider" class="control-label ml-0">
-                Providers
+                {{# str }} providers, mod_goone {{/ str }}
             </label>
             {{#facets}}{{#instance}}
             <div>
-            <select name="provider" id="provider" multiple="multiple">
-                
+            <select name="provider" id="provider" multiple="multiple">                
                     {{#buckets}}
-
                     <option value="{{ key }}">{{ name }}</option>
-
-                    {{/buckets}}
-
-                    
+                    {{/buckets}}  
                 </select>
             </div>
             {{/instance}}{{/facets}}
             </div>
             <div class="form-group col-sm-6 col-md-3">
                 <label class="control-label ml-0" for="language">
-                {{#facets}}{{#language}}Language
+                {{#facets}}{{#language}}{{# str }} language, mod_goone {{/ str }}
             </label>
             <div>
             <select name="language" id="language" multiple="multiple">
@@ -92,7 +73,7 @@
             </div>
             <div class="form-group col-sm-6 col-md-3">
                 <label class="control-label ml-0" for="tag">
-                {{#facets}}{{#tag}}Tag
+                {{#facets}}{{#tag}}{{# str }} tag, mod_goone {{/ str }}
             </label>
             <div>
             <select name="tag" id="tag" multiple="multiple">
@@ -103,7 +84,7 @@
             </div>
             <div class="form-group col-sm-6 col-md-3">
                 <label class="control-label ml-0" for="type">
-                    Type
+                    {{# str }} type, mod_goone {{/ str }}
                 </label>
                 <div>
                     <select name="type" id="type" class="form-control multiselect-search" multiple="multiple">
@@ -124,31 +105,44 @@
 
         $('#provider').multiselect({
             inheritClass: true,
-             enableFiltering: true,
-              maxHeight: 350,
-               buttonWidth: '250px',
-               includeResetOption: true,
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering:true,
+            maxHeight: 350,
+            buttonWidth: '15rem',
+            includeResetOption: true,
             resetText: "Clear Selection",
             nonSelectedText: "Any",
             onChange: function() {
                 changeFilter();
             }});
-        $('#tag').multiselect({inheritClass: true, enableFiltering: true, maxHeight: 350, buttonWidth: '250px',
+        $('#tag').multiselect({inheritClass: true,
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering:true,
+            maxHeight: 350,
+            buttonWidth: '15rem',
             includeResetOption: true,
             resetText: "Clear Selection",
             nonSelectedText: "Any",
             onChange: function(element, checked) {
                 changeFilter();
             }});
-        $('#language').multiselect({inheritClass: true, enableFiltering: true, maxHeight: 350, buttonWidth: '250px',
-                           includeResetOption: true,
+        $('#language').multiselect({inheritClass: true,
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering:true,
+            maxHeight: 350,
+            buttonWidth: '15rem',
+            includeResetOption: true,
             resetText: "Clear Selection",
             nonSelectedText: "Any",
             onChange: function(element, checked) {
                 changeFilter();
             }});
-        $('#type').multiselect({inheritClass: true, enableFiltering: true, maxHeight: 350, buttonWidth: '250px',
-                           includeResetOption: true,
+        $('#type').multiselect({inheritClass: true,
+            enableFiltering: true,
+            enableCaseInsensitiveFiltering:true,
+            maxHeight: 350,
+            buttonWidth: '15rem',
+            includeResetOption: true,
             resetText: "Clear Selection",
             nonSelectedText: "Any",
             onChange: function(element, checked) {
@@ -174,32 +168,51 @@
 <style>
     .form-inline label {
         display:block;
-
-
     }
     .multiselect-clear-filter{
         display: none;
+    }
+    .row{
+        display: flex;
+    }
+    .go1-provider p{
+        font-weight: 300!important;
+    }
+    .badge {
+        margin-left:1rem;
+        margin-right:0.5rem;
+    }
+    .preloader {
+        text-align: center;
+    }
+    .modal-body {
+        height:55rem;
+    }
+    .card-img-top {
+        width:100%;
+        margin-left: auto!important;
+        margin-right: auto!important;
     }
 </style>
 
 
 <div class="container">
         <div id="latest-go1-result">
-            <h2>Results:</h2>
+            <h2>{{# str }} results, mod_goone {{/ str }}:</h2>
         </div>
         <div id="goone-browser-results">
     
             
         </div>
 
-        <div id="spinny" class="w-100 text-center" style="display:block;">
-            <img src="https://cdn-images-1.medium.com/max/1600/1*9EBHIOzhE1XfMYoKz1JcsQ.gif">
+        <div id="spinny" class="preloader w-100 text-center" style="display:block;">
+            <img src="pix/spinner.gif">
         </div>
                 <div id="load-more-div" class="w-100 text-center my-2" style="display:none;">
-        <button id="load-more" class="btn btn-primary margin-top-5"> Load More</button>
+        <button id="load-more" class="btn btn-primary margin-top-5"> {{# str }} loadmore, mod_goone {{/ str }}</button>
         </div>
                         <div id="end-of-results" class="w-100 text-center my-2" style="display:none;">
-        End of results.
+        {{# str }} endofresults, mod_goone {{/ str }}
         </div>
 
 
@@ -215,9 +228,9 @@ function changeFilter() {
     loadResults($("#type").val(),$("#tag").val(),$("#language").val(),$("#provider").val(),$("#keyword").val(),$("#sort").val(),offSet);
 }
 
-function loadResults(ptype, tag, language, provider, keyword, sort, offSet){
+function loadResults(type, tag, language, provider, keyword, sort, offSet){
     url = "/mod/goone/hits.php?"
-     + "type=" + ptype
+     + "type=" + type
      + "&tag=" + tag
      + "&language=" + language
      + "&provider=" + provider
@@ -242,7 +255,7 @@ function loadResults(ptype, tag, language, provider, keyword, sort, offSet){
              }
             $("#latest-go1-result h2").html($(".go1-result").last().html());
 
-            if(ptype+'' != $("#type").val()+'' || tag+'' != $("#tag").val()+'' || language+'' != $("#language").val()+'' || provider+'' != $("#provider").val()+'') {
+            if(type+'' != $("#type").val()+'' || tag+'' != $("#tag").val()+'' || language+'' != $("#language").val()+'' || provider+'' != $("#provider").val()+'') {
                 changeFilter();
             }
         }
@@ -261,7 +274,7 @@ $("#load-more").click(function() {
 $('#keyword').keypress(function (e) {
   if (e.which == 13) {
     $('#keyword').submit();
-    changeFilter();    //<---- Add this line
+    changeFilter();  
   }
 });
 

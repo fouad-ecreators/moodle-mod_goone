@@ -14,6 +14,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Intercepts SCORM API to write user progress in GO1 course
+ *
+ * @package   mod_goone
+ * @copyright 2019, eCreators PTY LTD
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author    Fouad Saikali <fouad@ecreators.com.au>
+ */
+
 require_once('../../config.php');
 require_once($CFG->dirroot.'/mod/goone/lib.php');
 
@@ -53,19 +62,17 @@ require_login($course, false, $cm);
 if (confirm_sesskey() && (!empty($scoid))) {
     $result = true;
     $request = null;
-        foreach (data_submitted() as $element => $value) {
-            $element = str_replace('__', '.', $element);
-            //cmi.core.lesson_status
-            //cmi.core.lesson_location
-            if ($element == 'cmi.core.lesson_location') {
-                $netelement = preg_replace('/\.N(\d+)\./', "\.\$1\.", $element);
-                $result = goone_set_completion($cm,$USER->id,$value,"inprogress");
+    foreach (data_submitted() as $element => $value) {
+        $element = str_replace('__', '.', $element);
+        if ($element == 'cmi.core.lesson_location') {
+            $netelement = preg_replace('/\.N(\d+)\./', "\.\$1\.", $element);
+            $result = goone_set_completion($cm, $USER->id, $value, "inprogress");
 
-            }
-            if ($element == 'cmi.core.lesson_status' && $value == 'passed') {
-                $netelement = preg_replace('/\.N(\d+)\./', "\.\$1\.", $element);
-                $result = goone_set_completion($cm,$USER->id,'',"completed");
-            }
+        }
+        if ($element == 'cmi.core.lesson_status' && $value == 'passed') {
+            $netelement = preg_replace('/\.N(\d+)\./', "\.\$1\.", $element);
+            $result = goone_set_completion($cm, $USER->id, '', "completed");
+        }
     }
     if ($result) {
         echo "true\n0";

@@ -1,4 +1,28 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Class for backup
+ *
+ * @package   mod_goone
+ * @copyright 2019, eCreators PTY LTD
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author    Fouad Saikali <fouad@ecreators.com.au>
+ */
+
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -21,31 +45,27 @@ class backup_goone_activity_structure_step extends backup_activity_structure_ste
                                                   'timecreated',
                                                   'timemodified'));
 
+        $goonecompletions = new backup_nested_element('goonecompletions');
 
-        $goone_completions = new backup_nested_element('goone_completions');
-
-        $goone_completion = new backup_nested_element('goone_completion', array('id'),
+        $goonecompletion = new backup_nested_element('goone_completion', array('id'),
                                             array('gooneid',
                                                   'userid',
                                                   'location',
                                                   'completed'));
                 // Build the tree
-                $goone->add_child($goone_completions);
-                $goone_completions->add_child($goone_completion);
-
-
+                $goone->add_child($goonecompletions);
+                $goonecompletions->add_child($goonecompletion);
 
         // Define sources
         $goone->set_source_table('goone', array('id' => backup::VAR_ACTIVITYID));
 
          // All the rest of elements only happen if we are including user info
         if ($userinfo) {
-        $goone_completion->set_source_table('goone_completion', array('gooneid' => '../../id'));
+            $goonecompletion->set_source_table('goone_completion', array('gooneid' => '../../id'));
         }
 
         // Define id annotations
-        $goone_completion->annotate_ids('user', 'userid');
-
+        $goonecompletion->annotate_ids('user', 'userid');
 
         // Define file annotations
         // (none)

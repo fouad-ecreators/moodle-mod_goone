@@ -1,12 +1,28 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Define all the restore steps that will be used by the restore_goone_activity_task
+ * Class for restore
+ *
+ * @package   mod_goone
+ * @copyright 2019, eCreators PTY LTD
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author    Fouad Saikali <fouad@ecreators.com.au>
  */
 
-/**
- * Structure step to restore one goone activity
- */
 class restore_goone_activity_structure_step extends restore_activity_structure_step {
 
     protected function define_structure() {
@@ -16,8 +32,8 @@ class restore_goone_activity_structure_step extends restore_activity_structure_s
 
         $paths[] = new restore_path_element('goone', '/activity/goone');
 
-        if ($userinfo) {    
-            $paths[] = new restore_path_element('goone_completion', '/activity/goone/goone_completions/goone_completion');
+        if ($userinfo) {
+            $paths[] = new restore_path_element('goone_completion', '/activity/goone/goonecompletions/goonecompletion');
         }
 
         // Return the paths wrapped into standard activity structure
@@ -52,7 +68,7 @@ class restore_goone_activity_structure_step extends restore_activity_structure_s
         $newitemid = $DB->insert_record('goone_completion', $data);
         // No need to save this mapping as far as nothing depend on it
         // (child paths, file areas nor links decoder)
-    }    
+    }
 
     protected function after_execute() {
         // Add goone related files, no need to match by itemname (just internally handled context)

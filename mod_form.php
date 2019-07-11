@@ -43,7 +43,7 @@ if ($data->add) {
     $browserurl = new moodle_url('/mod/goone/browser.php',
         array (
             'mode' => 'update',
-            'id' => $update
+            'id' => $data->id
         )
     );
 }

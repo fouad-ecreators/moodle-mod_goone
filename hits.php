@@ -78,8 +78,9 @@ foreach ($data as $key => $value) {
     if (!$value == '') {
         $params .= $key.'='.$value.'&';
     }
-    $params = trim($params, '&');
 }
+$params = trim($params, '&');
+
 foreach ($language as $lang) {
     if ($lang) {
         $params .= "&language%5B%5D=".$lang;

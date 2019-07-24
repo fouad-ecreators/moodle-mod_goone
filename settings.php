@@ -36,7 +36,8 @@ if ($ADMIN->fulltree) {
     $defaultdisplayoptions = array(RESOURCELIB_DISPLAY_OPEN);
 
     $name = 'goone/oauth_flow';
-    $migratebutton = '<button class="btn btn-primary" onclick="openLogin()">'.get_string('oauth2_login', 'mod_goone').'</button>';
+    $migratebutton = '<a class="btn btn-primary" target="_blank" href="https://auth.GO1.com/oauth/authorize?client_id=Moodle&response_type=code&redirect=false&redirect_uri='.$CFG->wwwroot.
+    '&new_client=Moodle" role="button">'.get_string('oauth2_login', 'mod_goone').'</a>';
     $setting = new setting_statictext($name, $migratebutton);
     $settings->add($setting);
     echo ("</br>");
@@ -66,9 +67,3 @@ if ($ADMIN->fulltree) {
         )
     ));
 }
-?>
-<script>
-function openLogin() {
-  window.open("https://auth.GO1.com/oauth/authorize?client_id=Moodle&response_type=code&redirect=false&redirect_uri=<?php echo($CFG->wwwroot);?>&new_client=Moodle");
-}
-</script>

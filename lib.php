@@ -277,7 +277,7 @@ function goone_tokentest() {
     global $CFG, $DB;
 
     $config = get_config('mod_goone');
-    if (!$config->client_id || !$config->client_secret) {
+    if (empty$config->client_id) || empty($config->client_secret)) {
         set_config('token', '', 'mod_goone');
         return false;
     }

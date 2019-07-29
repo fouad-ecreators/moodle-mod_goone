@@ -42,6 +42,9 @@ if ($ADMIN->fulltree) {
     $settings->add($setting);
     echo ("</br>");
     $connectiontest = $OUTPUT->notification(get_string('connectionerroradmin', 'goone'), 'notifyproblem');
+    $hitsall = "";
+    $hitsprem = "";
+    $hitscoll = "";
     if (goone_tokentest()) {
         $connectiontest = $OUTPUT->notification(get_string('connectionsuccess', 'goone'), 'notifysuccess');
         $hitsall = " (".goone_hits("all").")";

@@ -18,7 +18,7 @@
  * Privacy API
  *
  * @package   mod_goone
- * @copyright 2019, eCreators PTY LTD
+ * @copyright 2019, eCreators PTY LTD based on work by 2019 Jun Pataleta
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @author    Fouad Saikali <fouad@ecreators.com.au>
  */
@@ -36,12 +36,6 @@ use core_privacy\local\request\writer;
 
 defined('MOODLE_INTERNAL') || die();
 
-/**
- * Implementation of the privacy subsystem plugin provider for the GO1 activity module.
- *
- * @copyright  2019 Jun Pataleta
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
 class provider implements
         // This plugin stores personal data.
         \core_privacy\local\metadata\provider,
@@ -159,15 +153,15 @@ class provider implements
 
         $params = ['modname' => 'goone', 'contextlevel' => CONTEXT_MODULE, 'userid' => $user->id] + $contextparams;
 
-        // Reference to the choice activity seen in the last iteration of the loop. By comparing this with the current record, and
-        // because we know the results are ordered, we know when we've moved to the answers for a new choice activity and therefore
+        // Reference to the goone activity seen in the last iteration of the loop. By comparing this with the current record, and
+        // because we know the results are ordered, we know when we've moved to the answers for a new goone activity and therefore
         // when we can export the complete data for the last activity.
         $lastcmid = null;
 
         $goonecompletions = $DB->get_recordset_sql($sql, $params);
 
         foreach ($goonecompletions as $goonecompletion) {
-            // If we've moved to a new choice, then write the last choice data and reinit the choice data array.
+            // If we've moved to a new completion record, then write the last completion record data and reinit the completion record data array.
             if ($lastcmid != $goonecompletion->cmid) {
                 if (!empty($goonedata)) {
                     $context = \context_module::instance($lastcmid);
@@ -189,22 +183,22 @@ class provider implements
         // The data for the last activity won't have been written yet, so make sure to write it now!
         if (!empty($goonedata)) {
             $context = \context_module::instance($lastcmid);
-            self::export_choice_data_for_user($goonedata, $context, $user);
+            self::export_goone_data_for_user($goonedata, $context, $user);
         }
     }
 
     /**
-     * Export the supplied personal data for a single choice activity, along with any generic data or area files.
+     * Export the supplied personal data for a single goone activity, along with any generic data or area files.
      *
-     * @param array $goonedata the personal data to export for the choice.
-     * @param \context_module $context the context of the choice.
+     * @param array $goonedata the personal data to export for the goone activity.
+     * @param \context_module $context the context of the goone activity.
      * @param \stdClass $user the user record
      */
     protected static function export_goone_data_for_user(array $goonedata, \context_module $context, \stdClass $user) {
-        // Fetch the generic module data for the choice.
+        // Fetch the generic module data for the goone activity.
         $contextdata = helper::get_context_data($context, $user);
 
-        // Merge with choice data and write it.
+        // Merge with goone activty data and write it.
         $contextdata = (object)array_merge((array)$contextdata, $goonedata);
         writer::with_context($context)->export_data([], $contextdata);
 
@@ -272,7 +266,7 @@ class provider implements
         $cm = get_coursemodule_from_id('goone', $context->instanceid);
 
         if (!$cm) {
-            // Only choice module will be handled.
+            // Only goone module will be handled.
             return;
         }
 

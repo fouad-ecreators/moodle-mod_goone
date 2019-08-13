@@ -63,7 +63,7 @@ $strexit = get_string('exitactivity', 'scorm');
 $exitlink = html_writer::link($exiturl, $strexit, array('title' => $strexit, 'class' => 'btn btn-default'));
 $PAGE->set_button($exitlink);
 
-// Handle opening in a new window.
+// Handle opening in a new window if option selected.
 if ($newwin == 1) {
     $PAGE->set_pagelayout('embedded');
 }
@@ -78,7 +78,7 @@ if ($isnewwin == 1 && $newwin == 0) {
     return;
 }
 
-// Load all the goodies we need now for GO1 modules.
+// Load all required mod_scorm fules we need now for GO1 content to load.
 $PAGE->requires->js(new moodle_url('/lib/cookies.js'), true);
 $PAGE->requires->js(new moodle_url('/mod/scorm/module.js'), true);
 $PAGE->requires->js(new moodle_url('/mod/scorm/request.js'), true);
@@ -90,7 +90,8 @@ if (!$newwin) {
     echo $OUTPUT->heading(format_string($goone->name));
 }
 goone_session_state($goone->id, $cmid);
-
+// GO1 SCORM content being rendered as HTML with token and learning object added,
+// 'loid' refers to specific GO1 content ID, 'token' is GO1 account specific access key .
 ?>
 
 <script type="text/javascript" src="https://api.go1.co/scorm/assets/jquery-1.12.4.min.js"></script>

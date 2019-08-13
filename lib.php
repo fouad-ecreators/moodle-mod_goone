@@ -43,10 +43,11 @@ function goone_add_instance($data, $mform = null) {
 
     $cmid = $data->coursemodule;
     $data->timecreated = time();
+    // Create temporary storage directory since we need to open a zip.
     $tempdir = make_temp_directory('goone/');
     $filename = $data->loid.'.zip';
     $tempfile = fopen($CFG->tempdir . '/goone/' . $filename, "w+");
-
+    // Download GO1 SCORM zip file from external API.
     $curl = curl_init();
     curl_setopt_array($curl, array(
         CURLOPT_URL => "https://api.GO1.com/v2/learning-objects/".$data->loid."/scorm",
@@ -68,10 +69,11 @@ function goone_add_instance($data, $mform = null) {
     curl_exec($curl);
 
     fclose($tempfile);
-
+    // Open zip and extract 'config.js'.
     $packer = get_file_packer('application/zip');
     if ($packer->extract_to_pathname($CFG->tempdir . '/goone/' . $filename, $tempdir . $data->loid)) {
         $token = file_get_contents($tempdir . $data->loid . '/config.js');
+        // Read token from config.js file to be stored in {goone} table.
         preg_match('/{([^}]*)}/', $token, $token);
         $token = json_decode($token[0]);
         $data->token = $token->token;
@@ -277,7 +279,7 @@ function goone_tokentest() {
     global $CFG, $DB;
 
     $config = get_config('mod_goone');
-    if (empty$config->client_id) || empty($config->client_secret)) {
+    if (empty($config->client_id) || empty($config->client_secret)) {
         set_config('token', '', 'mod_goone');
         return false;
     }

@@ -40,8 +40,6 @@ if (!goone_tokentest()) {
     echo $OUTPUT->notification(get_string('connectionerror', 'goone'), 'notifyproblem');
 }
 $facets = goone_get_facets();
-$facets = json_decode($facets, true);
-
 
 foreach ($facets['facets']['language']['buckets'] as &$obj) {
     $obj['name'] = goone_get_lang($obj['key']);

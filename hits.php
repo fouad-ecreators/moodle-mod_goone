@@ -33,11 +33,8 @@ $mode = required_param('mode', PARAM_TEXT);
 $id = required_param('id', PARAM_INT);
 $keyword = optional_param('keyword', '', PARAM_RAW);
 $provider = optional_param('provider', '', PARAM_RAW);
-$provider = explode(',', $provider);
 $language = optional_param('language', '', PARAM_RAW);
-$language = explode(',', $language);
 $tag = optional_param('tag', '', PARAM_RAW);
-$tag = explode(',', $tag);
 $price = optional_param('price', '', PARAM_RAW);
 $type = optional_param('type', '', PARAM_RAW);
 $sub = optional_param('subscribed', '', PARAM_RAW);
@@ -81,16 +78,19 @@ foreach ($data as $key => $value) {
 }
 $params = trim($params, '&');
 
+$language = explode(',', $language);
 foreach ($language as $lang) {
     if ($lang) {
         $params .= "&language%5B%5D=".$lang;
     }
 }
+$tag = explode(',', $tag);
 foreach ($tag as $ta) {
     if ($ta) {
         $params .= "&tags%5B%5D=".$ta;
     }
 }
+$provider = explode(',', $provider);
 foreach ($provider as $prov) {
     if ($prov) {
         $params .= "&provider%5B%5D=".$prov;
@@ -98,7 +98,6 @@ foreach ($provider as $prov) {
 }
 
 $response = goone_get_hits($params);
-$response = json_decode($response, true);
 
 foreach ($response['hits'] as &$obj) {
     $obj['description'] = goone_clean_hits($obj['description']);

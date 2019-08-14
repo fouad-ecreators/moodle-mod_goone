@@ -25,6 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->libdir . '/filelib.php');
 require_once($CFG->libdir.'/completionlib.php');
 $config = get_config('mod_goone');
 
@@ -48,25 +49,15 @@ function goone_add_instance($data, $mform = null) {
     $filename = $data->loid.'.zip';
     $tempfile = fopen($CFG->tempdir . '/goone/' . $filename, "w+");
     // Download GO1 SCORM zip file from external API.
-    $curl = curl_init();
-    curl_setopt_array($curl, array(
-        CURLOPT_URL => "https://api.GO1.com/v2/learning-objects/".$data->loid."/scorm",
-        CURLOPT_RETURNTRANSFER => false,
-        CURLOPT_ENCODING => "",
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 30,
-        CURLOPT_BINARYTRANSFER => true,
-        CURLOPT_FILE => $tempfile,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => "GET",
-        CURLOPT_POSTFIELDS => "Content-Disposition: form-data",
-        CURLOPT_HTTPHEADER => array(
-        "Authorization:  Bearer ".get_config('mod_goone', 'token'),
-        "cache-control: no-cache",
-        "content-type: multipart/form-data"
-        ),
-        ));
-    curl_exec($curl);
+    $curl = new curl();
+    $serverurl = "https://api.GO1.com/v2/learning-objects/".$data->loid."/scorm";
+    $header = array ("Authorization: Bearer ".get_config('mod_goone', 'token'));
+    $curl->setHeader($header);
+    $curlopts = array(
+        'file' => $tempfile,
+        'followlocation' => true
+        );
+    $curl->download_one($serverurl, null, $curlopts);
 
     fclose($tempfile);
     // Open zip and extract 'config.js'.
@@ -238,34 +229,18 @@ function goone_generatetoken() {
 
     $oauthid = get_config('mod_goone', 'client_id');
     $oauthsecret = get_config('mod_goone', 'client_secret');
-    $data = array ('client_id' => $oauthid,
+    $params = array ('client_id' => $oauthid,
                    'client_secret' => $oauthsecret,
                    'grant_type' => 'client_credentials');
-    $curl = curl_init();
 
-    curl_setopt_array($curl, array(
-    CURLOPT_URL => "https://auth.GO1.com/oauth/token",
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_ENCODING => "",
-    CURLOPT_MAXREDIRS => 10,
-    CURLOPT_TIMEOUT => 30,
-    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-    CURLOPT_CUSTOMREQUEST => "POST",
-    CURLOPT_POSTFIELDS => $data,
-    CURLOPT_HTTPHEADER => array(
-    "cache-control: no-cache"  ),
-    ));
-
-    $response = curl_exec($curl);
-    $err = curl_error($curl);
-
-    curl_close($curl);
+    $curl = new curl();
+    $serverurl = "https://auth.GO1.com/oauth/token";
+    $curloutput = @json_decode($curl->post($serverurl, $params), true);
 
     if ($err) {
         echo "cURL Error #:" . $err;
     } else {
-        $response = json_decode($response);
-        set_config('token', $response->access_token, 'mod_goone');
+        set_config('token', $curloutput['access_token'], 'mod_goone');
     }
 }
 
@@ -284,56 +259,23 @@ function goone_tokentest() {
         return false;
     }
 
-    $curl = curl_init();
-
-    curl_setopt_array($curl, array(
-    CURLOPT_URL => "https://auth.GO1.com/oauth/validate",
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_ENCODING => "",
-    CURLOPT_MAXREDIRS => 10,
-    CURLOPT_TIMEOUT => 30,
-    CURLOPT_HEADER => true,
-    CURLOPT_NOBODY => true,
-    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-    CURLOPT_CUSTOMREQUEST => "GET",
-    CURLOPT_POSTFIELDS => "",
-    CURLOPT_HTTPHEADER => array(
-    "Authorization: Bearer ".get_config('mod_goone', 'token'),
-    "cache-control: no-cache"
-    ),
-    ));
-
-    $response = curl_exec($curl);
-    $err = curl_error($curl);
-    $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-    curl_close($curl);
+    $curl = new curl();
+    $serverurl = "https://auth.GO1.com/oauth/validate";
+    $header = array ("Authorization: Bearer ".get_config('mod_goone', 'token'));
+    $curl->setHeader($header);
+    $curl->get($serverurl);
+    $httpcode = $curl->get_info()['http_code'];
     if ($httpcode == 200) {
         return true;
     } else {
         goone_generatetoken();
 
-        $curl = curl_init();
-
-        curl_setopt_array($curl, array(
-        CURLOPT_URL => "https://auth.GO1.com/oauth/validate",
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => "",
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 30,
-        CURLOPT_HEADER => true,
-        CURLOPT_NOBODY => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => "GET",
-        CURLOPT_POSTFIELDS => "",
-        CURLOPT_HTTPHEADER => array(
-        "Authorization: Bearer ".get_config('mod_goone', 'token'),
-        "cache-control: no-cache"
-        ),
-        ));
-
-        $response = curl_exec($curl);
-        $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        curl_close($curl);
+        $curl = new curl();
+        $serverurl = "https://auth.GO1.com/oauth/validate";
+        $header = array ("Authorization: Bearer ".get_config('mod_goone', 'token'));
+        $curl->setHeader($header);
+        $curl->get($serverurl);
+        $httpcode = $curl->get_info()['http_code'];
 
         if ($httpcode == 200) {
             return true;
@@ -371,42 +313,19 @@ function goone_hits($ftype) {
         $psub = "";
     }
 
-    $data = array (
+    $curl = new curl();
+    $serverurl = "https://api.GO1.com/v2/learning-objects";
+    $header = array ("Authorization: Bearer ".get_config('mod_goone', 'token'));
+    $curl->setHeader($header);
+    $params = array (
     'type' => '',
     'subscribed' => $psub,
     'collection' => $pcoll,
     'limit' => 0,
     'marketplace' => '');
+    $hits = @json_decode($curl->get($serverurl, $params), true);
 
-    foreach ($data as $key => $value) {
-        if (!$value == '') {
-            $params .= $key.'='.$value.'&';
-        }
-        $params = trim($params, '&');
-    }
-
-    $curl = curl_init();
-
-    curl_setopt_array($curl, array(
-    CURLOPT_URL => "https://api.GO1.com/v2/learning-objects?marketplace=all&".$params,
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_ENCODING => "",
-    CURLOPT_MAXREDIRS => 10,
-    CURLOPT_TIMEOUT => 30,
-    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-    CURLOPT_CUSTOMREQUEST => "GET",
-    CURLOPT_HTTPHEADER => array(
-    "Authorization: Bearer ".get_config('mod_goone', 'token'),
-    "cache-control: no-cache",
-    "content-type: multipart/form-data;"
-    ),
-    ));
-
-    $response = curl_exec($curl);
-    curl_close($curl);
-    $response = json_decode($response, true);
-
-    return number_format($response['total']);
+    return number_format($hits['total']);
 }
 
 /**
@@ -626,25 +545,12 @@ function goone_get_hits($params) {
         return false;
     }
 
+    $curl = new curl();
+    $serverurl = "https://api.GO1.com/v2/learning-objects?facets=instance,tag,language&marketplace=all&".$params;
+    $header = array ("Authorization: Bearer ".get_config('mod_goone', 'token'));
+    $curl->setHeader($header);
+    $response = @json_decode($curl->get($serverurl), true);
     $curl = curl_init();
-
-    curl_setopt_array($curl, array(
-    CURLOPT_URL => "https://api.GO1.com/v2/learning-objects?facets=instance,tag,language&marketplace=all&".$params,
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_ENCODING => "",
-    CURLOPT_MAXREDIRS => 10,
-    CURLOPT_TIMEOUT => 30,
-    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-    CURLOPT_CUSTOMREQUEST => "GET",
-    CURLOPT_HTTPHEADER => array(
-    "Authorization: Bearer ".get_config('mod_goone', 'token'),
-    "cache-control: no-cache",
-    "content-type: multipart/form-data"
-    ),
-    ));
-
-    $response = curl_exec($curl);
-    curl_close($curl);
 
     return $response;
 }
@@ -656,27 +562,25 @@ function goone_get_hits($params) {
  * @return object
  */
 function goone_get_facets() {
+    global $USER;
+
     if (!goone_tokentest()) {
         return;
     }
-    $curl = curl_init();
+    $curl = new curl();
+    $serverurl = "https://api.GO1.com/v2/learning-objects";
+    $header = array ("Authorization: Bearer ".get_config('mod_goone', 'token'));
+    $curl->setHeader($header);
+    $params = array ('facets' => 'instance,tag,language',
+                     'limit' => 0);
+    $facets = @json_decode($curl->get($serverurl, $params), true);
 
-    curl_setopt_array($curl, array(
-    CURLOPT_URL => "https://api.GO1.com/v2/learning-objects?facets=instance,tag,language&limit=0",
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_ENCODING => "",
-    CURLOPT_MAXREDIRS => 10,
-    CURLOPT_TIMEOUT => 30,
-    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-    CURLOPT_CUSTOMREQUEST => "GET",
-    CURLOPT_HTTPHEADER => array(
-    "Authorization: Bearer ".get_config('mod_goone', 'token'),
-    "cache-control: no-cache",
-    "content-type: application/x-www-form-urlencoded"
-    ),
-    ));
-    $facets = curl_exec($curl);
-    curl_close($curl);
+    foreach ($facets['facets']['language']['buckets'] as &$obj) {
+        $obj['name'] = goone_get_lang($obj['key']);
+        if ($obj['key'] == $USER->lang) {
+            $obj['selected'] = "selected";
+        }
+    }
     return $facets;
 }
 
@@ -716,39 +620,24 @@ function goone_modal_overview($loid) {
     if (!goone_tokentest()) {
         return;
     }
-
-    $curl = curl_init();
-
-    curl_setopt_array($curl, array(
-    CURLOPT_URL => "https://api.go1.com/v2/learning-objects/".$loid,
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_ENCODING => "",
-    CURLOPT_MAXREDIRS => 10,
-    CURLOPT_TIMEOUT => 30,
-    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-    CURLOPT_CUSTOMREQUEST => "GET",
-    CURLOPT_HTTPHEADER => array(
-      "Authorization: Bearer ".get_config('mod_goone', 'token'),
-      "cache-control: no-cache",
-      "content-type: multipart/form-data"
-    ),
-    ));
-
-    $response = curl_exec($curl);
-    curl_close($curl);
-    $data = json_decode($response, true);
-    $data['has_items'] = !empty($data['items']);
-
-    foreach ($data['delivery'] as &$obj) {
+    $curl = new curl();
+    $serverurl = "https://api.go1.com/v2/learning-objects/".$loid;
+    $header = array ("Authorization: Bearer ".get_config('mod_goone', 'token'));
+    $curl->setHeader($header);
+    $lodata = @json_decode($curl->get($serverurl), true);
+    // Data cleanup and prettification.
+    $lodata['has_items'] = !empty($lodata['items']);
+    foreach ($lodata['delivery'] as &$obj) {
         $obj = goone_convert_hours_mins($obj);
     }
-    return $data;
+    return $lodata;
 }
 
 /**
  * Converts timecode to human readable time for GO1 course durations from GO1 API results
  *
  * @param int $time
+ * @param string $format
  * @return string
  */
 function goone_convert_hours_mins($time, $format = '%02d:%02d') {
@@ -762,7 +651,7 @@ function goone_convert_hours_mins($time, $format = '%02d:%02d') {
 }
 
 /**
- * Converts timecode to human readable time for GO1 course durations from GO1 API results
+ * Capability check for adding or updating a goone activity
  *
  * @global object
  * @param string $mode

@@ -41,13 +41,6 @@ if (!goone_tokentest()) {
 }
 $facets = goone_get_facets();
 
-foreach ($facets['facets']['language']['buckets'] as &$obj) {
-    $obj['name'] = goone_get_lang($obj['key']);
-    if ($obj['key'] == $USER->lang) {
-        $obj['selected'] = "selected";
-    }
-}
-
 $context = context_system::instance();
 
 $PAGE->set_context($context);

@@ -18,7 +18,7 @@ This plugin was developed by eCreators PTY for GO1.com
 
 https://go1.com/
 
-<img alt="GO1.com" src="https://code.go1.com.au/uploads/-/system/appearance/logo/1/GO1-circle.png" width="400">
+<img alt="GO1.com" src="https://code.go1.com.au/uploads/-/system/appearance/logo/1/GO1-circle.png"  height="180">
 
 
 https://ecreators.com.au/

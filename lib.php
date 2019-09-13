@@ -35,8 +35,8 @@ $config = get_config('mod_goone');
  * will create a new instance and return the id number
  * of the new instance.
  *
- * @global object
  * @param object $data
+ * @param mod_page_mod_form $mform
  * @return int
  */
 function goone_add_instance($data, $mform = null) {
@@ -89,8 +89,8 @@ function goone_add_instance($data, $mform = null) {
  * (defined by the form in mod_form.php) this function
  * will update an existing instance with new data.
  *
- * @global object
  * @param object $data
+ * @param mod_page_mod_form $mform
  * @return bool
  */
 function goone_update_instance($data, $mform) {
@@ -110,7 +110,6 @@ function goone_update_instance($data, $mform) {
  * this function will permanently delete the instance
  * and any data that depends on it.
  *
- * @global object
  * @param int $id
  * @return bool
  */
@@ -138,7 +137,11 @@ function goone_get_popup_display_array() {
 }
 
 
-// Not sure if needed anymore.
+/**
+ * Potentially unused function
+ *
+ * @param object $obj completion record object
+ */
 function notify_completion($obj) {
     global $DB, $USER;
 
@@ -147,7 +150,7 @@ function notify_completion($obj) {
     $cm  = get_coursemodule_from_id('goone', $obj->courseModuleId, 0, false, MUST_EXIST);
     $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 
-    // Update completion state
+    // Update completion state.
     $completion = new completion_info($course);
 
     if ($completion->is_enabled($cm) && $goone->completionsubmit) {
@@ -179,8 +182,6 @@ function goone_supports($feature) {
  * Obtains the automatic completion state for this goone based on any conditions
  * in goone settings.
  *
- * @global object
- * @global object
  * @param object $course Course
  * @param object $cm Course-module
  * @param int $userid User ID
@@ -191,7 +192,7 @@ function goone_supports($feature) {
 function goone_get_completion_state($course, $cm, $userid, $type) {
     global $CFG, $DB;
 
-    // Get goone details
+    // Get goone details.
     if (!($goone = $DB->get_record('goone', array('id' => $cm->instance)))) {
         throw new Exception("Can't find goone {$cm->instance}");
     }
@@ -222,32 +223,32 @@ function goone_get_completion_state($course, $cm, $userid, $type) {
 /**
  * Generates go token and writes result to plugin config
  *
- * @global object
  */
 function goone_generatetoken() {
     global $CFG, $DB;
 
     $oauthid = get_config('mod_goone', 'client_id');
     $oauthsecret = get_config('mod_goone', 'client_secret');
-    $params = array ('client_id' => $oauthid,
-                   'client_secret' => $oauthsecret,
-                   'grant_type' => 'client_credentials');
+    $params = array (
+        'client_id' => $oauthid,
+        'client_secret' => $oauthsecret,
+        'grant_type' => 'client_credentials'
+    );
 
     $curl = new curl();
     $serverurl = "https://auth.GO1.com/oauth/token";
     $curloutput = @json_decode($curl->post($serverurl, $params), true);
-
-    if ($err) {
-        echo "cURL Error #:" . $err;
-    } else {
+    $curlinfo = $curl->get_info();
+    if ($curlinfo['http_code'] == 200 && isset($curloutput['access_token'])) {
         set_config('token', $curloutput['access_token'], 'mod_goone');
+    } else {
+        return false;
     }
 }
 
 /**
  * Generates go token and writes result to plugin config
  *
- * @global object
  * @return bool
  */
 function goone_tokentest() {
@@ -288,7 +289,7 @@ function goone_tokentest() {
 /**
  * Returns number of results for each filter option in site admin settings
  *
- * @param string $ftype
+ * @param string $ftype filter type
  * @return int
  */
 function goone_hits($ftype) {
@@ -296,21 +297,21 @@ function goone_hits($ftype) {
         return;
     }
 
-    $psub = "";
-    $pcoll = "";
-    $psub = "";
-    $params = "";
+    $psub = null;
+    $pcoll = null;
+    $psub = null;
+    $params = null;
 
     if ($ftype == "all") {
-        $psub = "";
-        $pcoll = "";
+        $psub = null;
+        $pcoll = null;
     }
     if ($ftype == "prem") {
         $psub = "true";
     }
     if ($ftype == "coll") {
         $pcoll = "default";
-        $psub = "";
+        $psub = null;
     }
 
     $curl = new curl();
@@ -318,11 +319,9 @@ function goone_hits($ftype) {
     $header = array ("Authorization: Bearer ".get_config('mod_goone', 'token'));
     $curl->setHeader($header);
     $params = array (
-    'type' => '',
     'subscribed' => $psub,
     'collection' => $pcoll,
-    'limit' => 0,
-    'marketplace' => '');
+    'limit' => 0);
     $hits = @json_decode($curl->get($serverurl, $params), true);
 
     return number_format($hits['total']);
@@ -336,7 +335,9 @@ function goone_hits($ftype) {
  */
 function goone_clean_hits($data) {
 
-    $data = preg_replace('/\\\\u[0-9A-F]{4}/i', '', str_replace("\u003C", "<", str_replace("\u003E", ">", str_replace("\/", "/", $data))));
+    $data = preg_replace(
+        '/\\\\u[0-9A-F]{4}/i', '', str_replace("\u003C", "<", str_replace("\u003E", ">", str_replace("\/", "/", $data)))
+    );
     $data = html_entity_decode($data);
     $data = preg_replace('(\s*<[a-z A-Z 0-9]*>\\s*)', '', $data);
     $data = preg_replace('(\s*<\/[a-z A-Z 0-9]*>\s*)', ' ', $data);
@@ -348,7 +349,6 @@ function goone_clean_hits($data) {
 /**
  * Outputs session state to SCORM API (using PAGE API) based on saved location and completion data
  *
- * @global object
  * @param int $gooneid
  * @param int $cmid
  */
@@ -357,7 +357,9 @@ function goone_session_state($gooneid, $cmid) {
 
     $def = new stdClass;
     // 0 = not started, 1 = in progress, 2 = complete.
-    $completionrecord = $DB->get_record('goone_completion', array('gooneid' => $gooneid, 'userid' => $USER->id), $fields = '*', $strictness = IGNORE_MISSING);
+    $completionrecord = $DB->get_record(
+        'goone_completion', array('gooneid' => $gooneid, 'userid' => $USER->id), $fields = '*', $strictness = IGNORE_MISSING
+    );
 
     $def->{(3)} = goone_scorm_def(1, '');
     $def->{(6)} = goone_scorm_def(1, '');
@@ -383,14 +385,15 @@ function goone_session_state($gooneid, $cmid) {
     $cmistring256 = '^[\\u0000-\\uFFFF]{0,64000}$';
     $cmistring4096 = $cmistring256;
 
-    $PAGE->requires->js_init_call('M.scorm_api.init', array($def, $cmiobj, $cmiint, $cmistring256, $cmistring4096, false, "0", "0", $CFG->wwwroot,
-        sesskey(), "6", "1", $cmistate, $cmid, "GO1", false, true, "3"));
+    $PAGE->requires->js_init_call(
+        'M.scorm_api.init', array($def, $cmiobj, $cmiint, $cmistring256, $cmistring4096, false, "0", "0", $CFG->wwwroot,
+        sesskey(), "6", "1", $cmistate, $cmid, "GO1", false, true, "3")
+    );
 }
 
 /**
  * Populates SCORM API definition for function goone_session_state
  *
- * @global object
  * @param int $state
  * @param string $location
  */
@@ -471,7 +474,6 @@ function goone_scorm_def($state, $location) {
 /**
  * Saves GO1 course completion state if enabled.
  *
- * @global object
  * @param object $cm
  * @param int $userid
  * @param string $location
@@ -487,7 +489,9 @@ function goone_set_completion($cm, $userid, $location, $type) {
     $gcomp->position = $location;
     $gcomp->timemodified = time();
 
-    $compstate = $DB->get_record('goone_completion', array('gooneid' => $cm->instance, 'userid' => $userid), 'id,completed', $strictness = IGNORE_MISSING);
+    $compstate = $DB->get_record(
+        'goone_completion', array('gooneid' => $cm->instance, 'userid' => $userid), 'id,completed', $strictness = IGNORE_MISSING
+    );
 
     if ($type == "completed" || $compstate->completed == 2) {
         $gcomp->completed = 2;
@@ -515,7 +519,6 @@ function goone_set_completion($cm, $userid, $location, $type) {
 /**
  * gets scorm_12.js file form mod_scorm, modifies the datamodelurl variable, stores in cache and Retrieves it.
  *
- * @global object
  * @return object
  */
 function goone_inject_datamodel() {
@@ -537,28 +540,93 @@ function goone_inject_datamodel() {
 /**
  * Retrieves GO1 search results from GO1 API for Content Browser
  *
- * @param array $params
+ * @param array $data
+ * @param string $language
+ * @param string $tag
+
  * @return object
  */
-function goone_get_hits($params) {
+function goone_get_hits(array $data, $language, $tag) {
     if (!goone_tokentest()) {
         return false;
     }
 
+    $config = get_config('mod_goone');
+    $data['limit'] = 20;
+    // Modifying request based on filter configuration.
+    if ($config->filtersel == 1) {
+        $data['subscribed'] = "true";
+    }
+    if ($config->filtersel == 2) {
+        $data['collection'] = "default";
+        $data['subscribed'] = "";
+    }
+    if ($config->filtersel == 0) {
+        $data['subscribed'] = "";
+        $data['collection'] = "";
+    }
+
+    $params = "";
+
+    foreach ($data as $key => $value) {
+        // Workaround for Moodle < 3.1.
+        if ($value == 'null') {
+            $value = '';
+        }
+        if (!$value == '') {
+            $params .= $key.'='.$value.'&';
+        }
+    }
+
+    $params = trim($params, '&');
+    // Iterating each language/tag item due to current API limitations.
+    $language = explode(',', $language);
+    foreach ($language as $lang) {
+        // Workaround for Moodle < 3.1.
+        if ($lang == 'null') {
+            unset($lang);
+        }
+        if (isset($lang) && $lang != '') {
+            $params .= "&language%5B%5D=".$lang;
+        }
+    }
+    $tag = explode(',', $tag);
+    foreach ($tag as $ta) {
+        // Workaround for Moodle < 3.1.
+        if ($ta == 'null') {
+            unset($ta);
+        }
+        if (isset($ta) && $ta != '') {
+            $params .= "&tags%5B%5D=".$ta;
+        }
+    }
+
     $curl = new curl();
+    // Appendeding to URL due to API limitations.
     $serverurl = "https://api.GO1.com/v2/learning-objects?facets=instance,tag,language&marketplace=all&".$params;
     $header = array ("Authorization: Bearer ".get_config('mod_goone', 'token'));
     $curl->setHeader($header);
     $response = @json_decode($curl->get($serverurl), true);
-    $curl = curl_init();
-
+    if ($curl->get_info()['http_code'] != 200) {
+        throw new moodle_exception('go1apierror');
+    }
+    foreach ($response['hits'] as &$obj) {
+        $obj['description'] = goone_clean_hits($obj['description']);
+        $obj['pricing']['price'] = '$'.$obj['pricing']['price'];
+        // Set the "Included" or "Free" flag on each result.
+        if (!empty($obj['subscription']) and ($obj['subscription']['licenses'] === -1 or $obj['subscription']['licenses'] > 0)) {
+            $obj['pricing']['price'] = get_string('included', 'goone');
+        }
+        if ($obj['pricing']['price'] === "$0") {
+            $obj['pricing']['price'] = get_string('free', 'goone');
+        }
+    }
     return $response;
 }
 
 /**
  * Retrieves GO1 search facets from GO1 API for Content Browser
  *
- * @param array $params
  * @return object
  */
 function goone_get_facets() {
@@ -577,7 +645,8 @@ function goone_get_facets() {
 
     foreach ($facets['facets']['language']['buckets'] as &$obj) {
         $obj['name'] = goone_get_lang($obj['key']);
-        if ($obj['key'] == $USER->lang) {
+        // Compare 2 letter language string and set as default selection in fitler.
+        if ($obj['key'] == substr($USER->lang, 0, 2)) {
             $obj['selected'] = "selected";
         }
     }
@@ -653,7 +722,6 @@ function goone_convert_hours_mins($time, $format = '%02d:%02d') {
 /**
  * Capability check for adding or updating a goone activity
  *
- * @global object
  * @param string $mode
  * @param int $id
  */
@@ -677,4 +745,21 @@ function goone_check_capabilities($mode, $id) {
         default:
             throw new moodle_exception('invalidparam');
     }
+}
+
+/**
+ * Construct GO1 signup url
+ *
+ */
+function goone_signup_url() {
+    global $CFG;
+
+    $partnerurl = "";
+    $partnerid = get_config('mod_goone', 'partnerid');
+    if (!empty($partnerid)) {
+        $partnerurl = "&partner_portal_id=".$partnerid;
+    }
+    $url = 'https://auth.GO1.com/oauth/authorize?client_id=Moodle&response_type=code&redirect=false&redirect_uri='
+        .$CFG->wwwroot.'&new_client=Moodle'.$partnerurl;
+    return $url;
 }

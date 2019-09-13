@@ -31,7 +31,7 @@ require_once($CFG->dirroot.'/mod/scorm/locallib.php');
 require_once($CFG->dirroot.'/mod/scorm/datamodels/scorm_12lib.php');
 $newwin = false;
 $cmid   = required_param('id', PARAM_INT);
-$newwin = optional_param('win', '', PARAM_INT);  // Course Module ID
+$newwin = optional_param('win', '', PARAM_INT);  // Course Module ID.
 $cm     = get_coursemodule_from_id('goone', $cmid, 0, false, MUST_EXIST);
 $course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
 if ($newwin == 1) {

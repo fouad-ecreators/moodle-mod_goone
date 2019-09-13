@@ -23,17 +23,26 @@
  * @author    Fouad Saikali <fouad@ecreators.com.au>
  */
 
-
 defined('MOODLE_INTERNAL') || die();
-
+/**
+ * Define the complete choice structure for backup, with file and id annotations
+ *
+ * @package   mod_goone
+ * @copyright 2019, eCreators PTY LTD
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class backup_goone_activity_structure_step extends backup_activity_structure_step {
 
+    /**
+     * Define the structure for the assign activity
+     * @return void
+     */
     protected function define_structure() {
 
-        // To know if we are including userinfo
+        // To know if we are including userinfo.
         $userinfo = $this->get_setting_value('userinfo');
 
-        // Define each element separated
+        // Define each element separated.
 
         $goone = new backup_nested_element('goone', array('id'),
                                             array('name',
@@ -52,25 +61,25 @@ class backup_goone_activity_structure_step extends backup_activity_structure_ste
                                                   'userid',
                                                   'location',
                                                   'completed'));
-                // Build the tree
+                // Build the tree.
                 $goone->add_child($goonecompletions);
                 $goonecompletions->add_child($goonecompletion);
 
-        // Define sources
+        // Define sources.
         $goone->set_source_table('goone', array('id' => backup::VAR_ACTIVITYID));
 
-         // All the rest of elements only happen if we are including user info
+         // All the rest of elements only happen if we are including user info.
         if ($userinfo) {
             $goonecompletion->set_source_table('goone_completion', array('gooneid' => '../../id'));
         }
 
-        // Define id annotations
+        // Define id annotations.
         $goonecompletion->annotate_ids('user', 'userid');
 
-        // Define file annotations
-        // (none)
+        // Define file annotations.
+        // (none).
 
-        // Return the root element (goone), wrapped into standard activity structure
+        // Return the root element (goone), wrapped into standard activity structure.
         return $this->prepare_activity_structure($goone);
     }
 

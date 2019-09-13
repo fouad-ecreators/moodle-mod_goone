@@ -23,35 +23,36 @@
  * @author    Fouad Saikali <fouad@ecreators.com.au>
  */
 
-
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/mod/goone/backup/moodle2/restore_goone_stepslib.php'); // Because it exists (must)
+require_once($CFG->dirroot . '/mod/goone/backup/moodle2/restore_goone_stepslib.php');
 
 /**
- * goone restore task that provides all the settings and steps to perform one
- * complete restore of the activity
+ * Goone restore task that provides all the settings and steps to perform one complete restore of the activity.
+ * @package   mod_goone
+ * @copyright 2019, eCreators PTY LTD
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class restore_goone_activity_task extends restore_activity_task {
 
     /**
-     * Define (add) particular settings this activity can have
+     * Define (add) particular settings this activity can have.
      */
     protected function define_my_settings() {
-        // No particular settings for this activity
+        // No particular settings for this activity.
     }
 
     /**
-     * Define (add) particular steps this activity can have
+     * Define (add) particular steps this activity can have.
      */
     protected function define_my_steps() {
-        // goone only has one structure step
+        // Goone only has one structure step.
         $this->add_step(new restore_goone_activity_structure_step('goone_structure', 'goone.xml'));
     }
 
     /**
      * Define the contents in the activity that must be
-     * processed by the link decoder
+     * processed by the link decoder.
      */
     static public function define_decode_contents() {
         $contents = array();
@@ -60,7 +61,7 @@ class restore_goone_activity_task extends restore_activity_task {
 
     /**
      * Define the decoding rules for links belonging
-     * to the activity to be executed by the link decoder
+     * to the activity to be executed by the link decoder.
      */
     static public function define_decode_rules() {
         $rules = array();
@@ -71,7 +72,7 @@ class restore_goone_activity_task extends restore_activity_task {
      * Define the restore log rules that will be applied
      * by the {@link restore_logs_processor} when restoring
      * goone logs. It must return one array
-     * of {@link restore_log_rule} objects
+     * of {@link restore_log_rule} objects.
      */
     static public function define_restore_log_rules() {
         $rules = array();
@@ -82,11 +83,11 @@ class restore_goone_activity_task extends restore_activity_task {
      * Define the restore log rules that will be applied
      * by the {@link restore_logs_processor} when restoring
      * course logs. It must return one array
-     * of {@link restore_log_rule} objects
+     * of {@link restore_log_rule} objects.
      *
      * Note this rules are applied when restoring course logs
      * by the restore final task, but are defined here at
-     * activity level. All them are rules not linked to any module instance (cmid = 0)
+     * activity level. All them are rules not linked to any module instance (cmid = 0).
      */
     static public function define_restore_log_rules_for_course() {
         $rules = array();

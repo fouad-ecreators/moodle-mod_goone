@@ -36,6 +36,12 @@ use core_privacy\local\request\writer;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Implementation of the privacy subsystem plugin provider for the goone activity module.
+ *
+ * @copyright  2019 eCreators PTY LTD based on work by 2019 Jun Pataleta
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class provider implements
         // This plugin stores personal data.
         \core_privacy\local\metadata\provider,
@@ -148,7 +154,7 @@ class provider implements
             INNER JOIN {goone} g ON g.id = cm.instance
             INNER JOIN {goone_completion} gc ON gc.gooneid = g.id
                  WHERE c.id {$contextsql}
-                       AND ca.userid = :userid
+                       AND gc.userid = :userid
               ORDER BY cm.id";
 
         $params = ['modname' => 'goone', 'contextlevel' => CONTEXT_MODULE, 'userid' => $user->id] + $contextparams;
@@ -161,7 +167,8 @@ class provider implements
         $goonecompletions = $DB->get_recordset_sql($sql, $params);
 
         foreach ($goonecompletions as $goonecompletion) {
-            // If we've moved to a new completion record, then write the last completion record data and reinit the completion record data array.
+            // If we've moved to a new completion record, then write the last completion record data
+            // and reinit the completion record data array.
             if ($lastcmid != $goonecompletion->cmid) {
                 if (!empty($goonedata)) {
                     $context = \context_module::instance($lastcmid);

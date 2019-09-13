@@ -36,11 +36,11 @@ if ($ADMIN->fulltree) {
     $defaultdisplayoptions = array(RESOURCELIB_DISPLAY_OPEN);
 
     $name = 'goone/oauth_flow';
-    $migratebutton = '<a class="btn btn-primary" target="_blank" href="https://auth.GO1.com/oauth/authorize?client_id=Moodle&response_type=code&redirect=false&redirect_uri='.$CFG->wwwroot.
-    '&new_client=Moodle" role="button">'.get_string('oauth2_login', 'mod_goone').'</a>';
+    $migratebutton = '<a class="btn btn-primary" target="_blank" href="'
+        .goone_signup_url().'" role="button">'.get_string('oauth2_login', 'mod_goone').'</a>';
     $setting = new setting_statictext($name, $migratebutton);
     $settings->add($setting);
-    echo ("</br>");
+
     $connectiontest = $OUTPUT->notification(get_string('connectionerroradmin', 'goone'), 'notifyproblem');
     $hitsall = "";
     $hitsprem = "";
@@ -51,7 +51,6 @@ if ($ADMIN->fulltree) {
         $hitsprem = " (".goone_hits("prem").")";
         $hitscoll = " (".goone_hits("coll").")";
     }
-
     $setting = new setting_statictext('test', $connectiontest);
     $settings->add($setting);
 
@@ -63,10 +62,15 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_heading('filterheading',
         get_string('filteroptionheading', 'goone'), ''));
 
-    $settings->add(new admin_setting_configselect('mod_goone/filtersel', get_string('filtersel', 'goone'), get_string('filterseldesc', 'goone'), '0',
+    $settings->add(new admin_setting_configselect('mod_goone/filtersel',
+        get_string('filtersel', 'goone'), get_string('filterseldesc', 'goone'), '0',
         array('0' => get_string('showallfilter', 'goone').$hitsall,
             '1' => get_string('premiumfilter', 'goone').$hitsprem,
             '2' => get_string('collectionsfilter', 'goone').$hitscoll
         )
     ));
+    $settings->add(new admin_setting_heading('partnersettings',
+        get_string('partnersettingheading', 'goone'), ''));
+    $settings->add(new admin_setting_configtext('mod_goone/partnerid',
+        get_string('partnerid', 'goone'), get_string('partneriddesc', 'goone'), ''));
 }

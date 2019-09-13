@@ -32,14 +32,14 @@ require_once($CFG->dirroot.'/mod/goone/lib.php');
 $PAGE->requires->js( new moodle_url($CFG->wwwroot . '/mod/goone/js/form.js'));
 
 $url = new moodle_url('/mod/goone/browser.php');
-if ($data->add) {
+if (isset($data->add)) {
     $browserurl = new moodle_url('/mod/goone/browser.php',
         array (
             'mode' => 'add',
             'id' => $course->id
         )
     );
-} else if ($data->update) {
+} else if (isset($data->update)) {
     $browserurl = new moodle_url('/mod/goone/browser.php',
         array (
             'mode' => 'update',
@@ -47,17 +47,29 @@ if ($data->add) {
         )
     );
 }
-
+/**
+ * Goone settings form.
+ *
+ * @package   mod_goone
+ * @copyright 2019, eCreators PTY LTD
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class mod_goone_mod_form extends moodleform_mod {
 
-    function definition() {
+    /**
+     * Called to define this moodle form
+     *
+     * @return void
+     */
+    public function definition() {
         global $CFG, $DB, $OUTPUT, $PAGE, $browserurl;
 
         $mform =& $this->_form;
         $mform->addElement('text', 'name', get_string('name'), array('size' => '64'));
         $mform->setType('name', PARAM_TEXT);
         $mform->addRule('name', get_string('nonameselected', 'goone'), 'required', null, 'client');
-        $mform->addElement('button', get_string('contentbrowser', 'goone'), get_string('lobrowser', 'goone'), array('onclick' => 'openBrowser("'.$browserurl.'")'));
+        $mform->addElement('button', get_string('contentbrowser', 'goone'),
+            get_string('lobrowser', 'goone'), array('onclick' => 'openBrowser("'.$browserurl.'")'));
 
         $mform->addElement('text', 'loid', get_string('selectedloid', 'goone'), array('size' => '16', 'readonly'));
         $mform->setType('loid', PARAM_TEXT);

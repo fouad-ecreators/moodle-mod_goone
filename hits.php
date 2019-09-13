@@ -31,86 +31,27 @@ $config = get_config('mod_goone');
 
 $mode = required_param('mode', PARAM_TEXT);
 $id = required_param('id', PARAM_INT);
-$keyword = optional_param('keyword', '', PARAM_RAW);
-$provider = optional_param('provider', '', PARAM_RAW);
-$language = optional_param('language', '', PARAM_RAW);
-$tag = optional_param('tag', '', PARAM_RAW);
-$price = optional_param('price', '', PARAM_RAW);
-$type = optional_param('type', '', PARAM_RAW);
-$sub = optional_param('subscribed', '', PARAM_RAW);
-$page = optional_param('page', '', PARAM_RAW);
-$sort = optional_param('sort', '', PARAM_RAW);
-$offset = optional_param('offset', '', PARAM_RAW);
-$limit = 20;
+$keyword = optional_param('keyword', '', PARAM_TEXT);
+$provider = optional_param('provider', '', PARAM_TEXT);
+$language = optional_param('language', '', PARAM_TEXT);
+$tag = optional_param('tag', '', PARAM_TEXT);
+$price = optional_param('price', '', PARAM_TEXT);
+$type = optional_param('type', '', PARAM_TEXT);
+$sub = optional_param('subscribed', '', PARAM_TEXT);
+$sort = optional_param('sort', '', PARAM_TEXT);
+$offset = optional_param('offset', '', PARAM_INT);
 
 goone_check_capabilities($mode, $id);
 
-if (!$page) {
-    $page = 0;
-}
-if ($config->filtersel == 1) {
-    $sub = "true";
-}
-if ($config->filtersel == 2) {
-    $coll = "default";
-    $sub = "";
-}
-if ($config->filtersel == 0) {
-    $sub = "";
-    $coll = "";
-}
-
-$data = array (
+$params = array (
     'keyword' => $keyword,
     'price%5Bmax%5D' => $price,
     'type' => $type,
-    'subscribed' => $sub,
     'offset' => $offset,
-    'collection' => $coll,
     'sort' => $sort,
-    'limit' => $limit);
+    'providers' => $provider);
 
-$params = "";
-foreach ($data as $key => $value) {
-    if (!$value == '') {
-        $params .= $key.'='.$value.'&';
-    }
-}
-$params = trim($params, '&');
-
-$language = explode(',', $language);
-foreach ($language as $lang) {
-    if ($lang) {
-        $params .= "&language%5B%5D=".$lang;
-    }
-}
-$tag = explode(',', $tag);
-foreach ($tag as $ta) {
-    if ($ta) {
-        $params .= "&tags%5B%5D=".$ta;
-    }
-}
-$provider = explode(',', $provider);
-foreach ($provider as $prov) {
-    if ($prov) {
-        $params .= "&provider%5B%5D=".$prov;
-    }
-}
-
-$response = goone_get_hits($params);
-
-foreach ($response['hits'] as &$obj) {
-    $obj['description'] = goone_clean_hits($obj['description']);
-    $obj['pricing']['price'] = '$'.$obj['pricing']['price'];
-    // Set the "Included" or "Free" flag on each result.
-    if (!empty($obj['subscription']) and ($obj['subscription']['licenses'] === -1 or $obj['subscription']['licenses'] > 0)) {
-        $obj['pricing']['price'] = get_string('included', 'goone');
-    }
-    if ($obj['pricing']['price'] === "$0") {
-        $obj['pricing']['price'] = get_string('free', 'goone');
-    }
-}
-
+$response = goone_get_hits($params, $language, $tag);
 
 $context = context_system::instance();
 $PAGE->set_context($context);

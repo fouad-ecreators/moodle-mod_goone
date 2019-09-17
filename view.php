@@ -38,9 +38,6 @@ if ($newwin == 1) {
     $newwin = true;
 }
 
-$completion = new completion_info($course);
-$completion->set_module_viewed($cm);
-
 require_login($course, true, $cm);
 
 if (!$cm = get_coursemodule_from_id('goone', $cmid)) {
@@ -57,6 +54,9 @@ $PAGE->set_url('/mod/goone/view.php', array('id' => $cm->id));
 $PAGE->set_title($goone->name);
 $PAGE->requires->js_call_amd('mod_goone/viewer', 'init');
 
+
+$completion = new completion_info($course);
+$completion->set_module_viewed($cm);
 
 $exiturl = course_get_url($course, $cm->section);
 $strexit = get_string('exitactivity', 'scorm');

@@ -287,47 +287,6 @@ function goone_tokentest() {
 }
 
 /**
- * Returns number of results for each filter option in site admin settings
- *
- * @param string $ftype filter type
- * @return int
- */
-function goone_hits($ftype) {
-    if (!goone_tokentest()) {
-        return;
-    }
-
-    $psub = null;
-    $pcoll = null;
-    $psub = null;
-    $params = null;
-
-    if ($ftype == "all") {
-        $psub = null;
-        $pcoll = null;
-    }
-    if ($ftype == "prem") {
-        $psub = "true";
-    }
-    if ($ftype == "coll") {
-        $pcoll = "default";
-        $psub = null;
-    }
-
-    $curl = new curl();
-    $serverurl = "https://api.GO1.com/v2/learning-objects";
-    $header = array ("Authorization: Bearer ".get_config('mod_goone', 'token'));
-    $curl->setHeader($header);
-    $params = array (
-    'subscribed' => $psub,
-    'collection' => $pcoll,
-    'limit' => 0);
-    $hits = @json_decode($curl->get($serverurl, $params), true);
-
-    return number_format($hits['total']);
-}
-
-/**
  * Removes HTML tags for course descriptions retreived from GO1 API
  *
  * @param object $data
@@ -619,6 +578,9 @@ function goone_get_hits(array $data, $language, $tag) {
         }
         if ($obj['pricing']['price'] === "$0") {
             $obj['pricing']['price'] = get_string('free', 'goone');
+        }
+        if ($obj['image'] == '') {
+            $obj['image'] = "/mod/goone/pix/placeholder.png";
         }
     }
     return $response;

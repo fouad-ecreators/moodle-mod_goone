@@ -24,16 +24,16 @@
 }}
 
 <div class="container">
-      
 
-  <div class="card mx-auto" style="max-width:500px;margin:auto;">		  
-  	<img class="card-img-top" style="max-height:300px;" src="{{image}}" alt="Card image cap">
+
+  <div class="card mx-auto" style="max-width:500px;margin:auto;">
+  	{{#image}}<img class="card-img-top" style="max-height:300px;" src="{{image}}" alt="Card image cap">{{/image}}
   	<div class="card-body bg-light">
     <h3 class="card-title">{{title}}</h3>
     <p class="badge badge-black mr-1 m-0" style="text-transform:uppercase;">{{type}}</p>
     <em class="text-muted">{{#provider}}{{name}}{{/provider}}</em></br>
    {{#delivery}}{{#duration}} <i class="fa fa-clock-o mr-1"></i><em>{{duration}}</em>{{/duration}}{{/delivery}}
-    </div>		
+    </div>
   </div>
 </div>
 

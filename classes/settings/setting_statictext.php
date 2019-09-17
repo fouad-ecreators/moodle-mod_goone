@@ -40,7 +40,7 @@ class setting_statictext extends \admin_setting {
      */
     public $text;
 
-   /**
+    /**
      * Construct admin settings html
      *
      * @param string $name setting name

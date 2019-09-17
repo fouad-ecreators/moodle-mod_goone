@@ -41,19 +41,6 @@ if ($ADMIN->fulltree) {
     $setting = new setting_statictext($name, $migratebutton);
     $settings->add($setting);
 
-    $connectiontest = $OUTPUT->notification(get_string('connectionerroradmin', 'goone'), 'notifyproblem');
-    $hitsall = "";
-    $hitsprem = "";
-    $hitscoll = "";
-    if (goone_tokentest()) {
-        $connectiontest = $OUTPUT->notification(get_string('connectionsuccess', 'goone'), 'notifysuccess');
-        $hitsall = " (".goone_hits("all").")";
-        $hitsprem = " (".goone_hits("prem").")";
-        $hitscoll = " (".goone_hits("coll").")";
-    }
-    $setting = new setting_statictext('test', $connectiontest);
-    $settings->add($setting);
-
     $settings->add(new admin_setting_configtext('mod_goone/client_id',
         get_string('clientid', 'goone'), get_string('clientiddesc', 'goone'), ''));
 
@@ -64,11 +51,12 @@ if ($ADMIN->fulltree) {
 
     $settings->add(new admin_setting_configselect('mod_goone/filtersel',
         get_string('filtersel', 'goone'), get_string('filterseldesc', 'goone'), '0',
-        array('0' => get_string('showallfilter', 'goone').$hitsall,
-            '1' => get_string('premiumfilter', 'goone').$hitsprem,
-            '2' => get_string('collectionsfilter', 'goone').$hitscoll
+        array('0' => get_string('showallfilter', 'goone'),
+            '1' => get_string('premiumfilter', 'goone'),
+            '2' => get_string('collectionsfilter', 'goone')
         )
     ));
+
     $settings->add(new admin_setting_heading('partnersettings',
         get_string('partnersettingheading', 'goone'), ''));
     $settings->add(new admin_setting_configtext('mod_goone/partnerid',

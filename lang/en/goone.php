@@ -27,7 +27,7 @@ defined('MOODLE_INTERNAL') || die;
 
 $string['pluginname'] = 'GO1';
 $string['pluginadministration'] = 'GO1 Admin';
-$string['modulename'] = 'GO1 Course';
+$string['modulename'] = 'GO1 Content Item';
 $string['modulenameplural'] = 'GO1';
 $string['modulename_help'] = 'Use GO1’s library of learning resources to help create your own custom training content, direct from your Moodle instance. </br>With GO1 content you have instant access to a growing library containing thousands of learning resources, from the best content providers around the world. Connecting Moodle and GO1 enables you to search the GO1 library for the right content for your training needs and easily add it to your chosen course for a simple course delivery experience. </br>GO1 has the world’s largest marketplace of training, offering you: </br><ul><li>a huge range of various types of learning resources including documents, interactive files, videos, full-length courses, and more</li><li>a comprehensive off-the-shelf library of professional development training covering areas of leadership, HR, and communications, as well as compliance training to meet your region\'s specific needs.</li></ul>';
 $string['userpreferences'] = 'User preferences';
@@ -35,7 +35,7 @@ $string['clientsecret'] = 'Client Secret';
 $string['clientsecretdesc'] = 'GO1 Oauth Client Secret';
 $string['clientid'] = 'Client ID';
 $string['clientiddesc'] = 'GO1 Oauth Client ID';
-$string['oauth2_login'] = 'Retreive GO1 Credentials';
+$string['oauth2_login'] = 'Retrieve GO1 Credentials';
 $string['connectionerroradmin'] = 'Failed to connect to GO1, please check your credentials.';
 $string['filteroptionheading'] = 'Content Settings';
 $string['showallfilterdesc'] = 'Show the entire GO1 Marketplace in the content browser when adding an activity. This overrides the other settings.';

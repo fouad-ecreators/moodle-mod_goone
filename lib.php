@@ -506,10 +506,19 @@ function goone_inject_datamodel() {
 
  * @return object
  */
-function goone_get_hits(array $data, $language, $tag) {
+function goone_get_hits($type, $tag, $language, $provider, $keyword, $sort, $offset) {
+    global $PAGE, $OUTPUT;
+
     if (!goone_tokentest()) {
         return false;
     }
+
+    $data = array (
+    'keyword' => $keyword,
+    'type' => $type,
+    'offset' => $offset,
+    'sort' => $sort,
+    'providers' => $provider);
 
     $config = get_config('mod_goone');
     $data['limit'] = 20;
@@ -584,7 +593,9 @@ function goone_get_hits(array $data, $language, $tag) {
             $obj['image'] = "/mod/goone/pix/placeholder.png";
         }
     }
-    return $response;
+    $context = context_system::instance();
+    $PAGE->set_context($context);
+    return $OUTPUT->render_from_template('mod_goone/hits', $response);
 }
 
 /**
@@ -649,6 +660,8 @@ function goone_get_lang($lang) {
  * @return object
  */
 function goone_modal_overview($loid) {
+    global $PAGE, $OUTPUT;
+
     if (!goone_tokentest()) {
         return;
     }
@@ -659,10 +672,16 @@ function goone_modal_overview($loid) {
     $lodata = @json_decode($curl->get($serverurl), true);
     // Data cleanup and prettification.
     $lodata['has_items'] = !empty($lodata['items']);
-    foreach ($lodata['delivery'] as &$obj) {
-        $obj = goone_convert_hours_mins($obj);
+    if (!empty($lodata['delivery'])) {
+        foreach ($lodata['delivery'] as &$obj) {
+            $obj = goone_convert_hours_mins($obj);
+        }
     }
-    return $lodata;
+    if ($lodata['image'] == " ") {
+        unset($lodata['image']);
+    }
+
+    return json_encode($lodata);
 }
 
 /**
